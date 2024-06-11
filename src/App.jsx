@@ -41,17 +41,65 @@ player.addListener({
     onStop
 });
 
+const lyrics = document.querySelector("#text");
+
 const playBtns = document.querySelectorAll(".play");
-const overlay = document.querySelector("#overlay");
 const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
 const rewindBtn = document.querySelector("#rewind");
 const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
+const songSelector = document.querySelector("#song");
+const customSong = document.querySelector("#custom-song");
+
 const positionEl = document.querySelector("#position strong");
 
-const artistSpan = document.querySelector("#artist span");
-const songSpan = document.querySelector("#song span");
+const artistSpan = document.querySelector("#artist-name span");
+const songSpan = document.querySelector("#song-name span");
+
+const songList = [
+    ["https://piapro.jp/t/hZ35/20240130103028", 4592293, 2727635, 2824326, 59415, 13962],
+    ["https://piapro.jp/t/--OD/20240202150903", 4592296, 2727636, 2824327, 59416, 13963],
+    ["https://piapro.jp/t/XiaI/20240201203346", 4592297, 2727637, 2824328, 59417, 13964],
+    ["https://piapro.jp/t/Rejk/20240202164429", 4592298, 2727638, 2824329, 59418, 13965],
+    ["https://piapro.jp/t/ELIC/20240130010349", 4592299, 2727639, 2824330, 59419, 13966],
+    ["https://piapro.jp/t/xEA7/20240202002556", 4592300, 2727640, 2824331, 59420, 13967]
+]
+
+const isValidUrl = urlString => {
+    try {
+        return Boolean(new URL(urlString));
+    } catch (e) {
+        return false;
+    }
+}
+
+const loadSong = (value, custom) => {
+    lyrics.textContent = "loading...";
+    customSong.style.display = "none";
+    songSpan.textContent = "";
+    artistSpan.textContent = "";
+
+    document
+        .querySelectorAll("#control *")
+        .forEach((item) => (item.disabled = true));
+
+    if (custom === false) {
+        player.createFromSongUrl(songList[value][0], {
+            video: {
+                beatId: songList[value][1],
+                chordId: songList[value][2],
+                repetitiveSegmentId: songList[value][3],
+                lyricId: songList[value][4],
+                lyricDiffId: songList[value][5]
+            }
+        }).then(() => lyrics.textContent = "");
+    } else {
+        if (isValidUrl(value) !== false) {
+            player.createFromSongUrl(value).then(() => lyrics.textContent = "");
+        }
+    }
+}
 
 /**
  * Called when the TextAlive App is initialized
@@ -63,13 +111,11 @@ function onAppReady(app) {
     // Show control if this app is launched standalone (not connected to a TextAlive host)
     if (!app.managed) {
         document.querySelector("#control").style.display = "block";
-        console.log()
 
         // Play button / Start music playback
         playBtns.forEach((playBtn) =>
             playBtn.addEventListener("click", () => {
                 player.video && player.requestPlay();
-                overlay.style.display = "none";
             })
         );
 
@@ -93,28 +139,38 @@ function onAppReady(app) {
             () => player.video && player.requestMediaSeek(0)
         );
 
-        volumeSlider.addEventListener("input", function () {
-            player.volume = volumeSlider.value;
-        });
+        volumeSlider.addEventListener(
+            "input",
+            () => player.volume = volumeSlider.value
+        );
 
-        progressBar.addEventListener("input", function() {
-          player.requestMediaSeek(progressBar.value * player.video.duration);
-        });
+        progressBar.addEventListener(
+            "input",
+            () => player.requestMediaSeek(progressBar.value * player.video.duration)
+        );
+
+        songSelector.addEventListener(
+            "change",
+            () => {
+                if (songSelector.value >= 0) {
+                    loadSong(songSelector.value, false);
+                } else {
+                    customSong.style.display = "inline";
+                    loadSong(customSong.value, true);
+                }
+            });
+
+        customSong.addEventListener(
+            "change",
+            () => {
+                loadSong(customSong.value, true);
+            }
+        );
     }
 
     if (!app.songUrl) {
-        // 未来交響曲 / ヤマギシコージ
-        player.createFromSongUrl("https://piapro.jp/t/Rejk/20240202164429", {
-            video: {
-                // 音楽地図訂正履歴
-                beatId: 4592298,
-                chordId: 2727638,
-                repetitiveSegmentId: 2824329,
-                // 歌詞タイミング訂正履歴: https://textalive.jp/lyrics/piapro.jp%2Ft%2FRejk%2F20240202164429
-                lyricId: 59418,
-                lyricDiffId: 13965
-            },
-        });
+        console.log('first load')
+        loadSong(songSelector.value, false);
     }
 }
 
@@ -134,8 +190,8 @@ function onVideoReady(v) {
 function onTimerReady(t) {
     if (!player.app.managed) {
         document
-            .querySelectorAll("button")
-            .forEach((btn) => (btn.disabled = false));
+            .querySelectorAll("#control *")
+            .forEach((item) => (item.disabled = false));
     }
 
     jumpBtn.disabled = !player.video.firstChar;
@@ -147,7 +203,7 @@ function onThrottledTimeUpdate(position) {
 }
 
 function onPlay() {
-    document.querySelector("#overlay").style.display = "none";
+    // document.querySelector("#overlay").style.display = "none";
 }
 
 function onPause() {
@@ -157,3 +213,4 @@ function onPause() {
 function onStop() {
     document.querySelector("#text").textContent = "-";
 }
+
