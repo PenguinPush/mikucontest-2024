@@ -26,7 +26,10 @@ const player = new Player({
         appName: "miku miku",
         token: "voiEWpeaIFwNII7p",
     },
-    mediaElement: document.querySelector("#media")
+    mediaElement: document.querySelector("#media"),
+    mediaBannerPosition: "top right",
+    vocalAmplitudeEnabled: true,
+    valenceArousalEnabled: true
 });
 
 // Register an event listener for TextAlive Player
@@ -56,6 +59,10 @@ const positionEl = document.querySelector("#position strong");
 
 const artistSpan = document.querySelector("#artist-name span");
 const songSpan = document.querySelector("#song-name span");
+
+const maxTextSize = 10
+const minTextSize = 2
+let textSize = maxTextSize;
 
 const songList = [
     ["https://piapro.jp/t/hZ35/20240130103028", 4592293, 2727635, 2824326, 59415, 13962],
@@ -200,6 +207,11 @@ function onTimerReady(t) {
 function onThrottledTimeUpdate(position) {
     positionEl.textContent = String(Math.floor(position));
     progressBar.value = position / player.video.duration;
+
+    let ratio = player.getVocalAmplitude(position) / player.getMaxVocalAmplitude();
+    textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
+
+    lyrics.style.fontSize = textSize + "em";
 }
 
 function onPlay() {
