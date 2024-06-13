@@ -14,7 +14,21 @@ import {Player} from "textalive-app-api";
 // Show words being vocalized in #text
 const animateWord = function (now, unit) {
     if (unit.contains(now)) {
-        document.querySelector("#text").textContent = unit.text;
+        lyrics.textContent = unit.text;
+
+        textSizeDelta = textSize
+
+        // resize text
+        let ratio = player.getVocalAmplitude(now) / player.getMaxVocalAmplitude();
+        textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
+
+        lyricsDiv.style.fontSize = textSize + "em";
+
+        // calculate how much squash and stretch to apply
+        stretch = (textSize - textSizeDelta) / 10;
+        lyricsDiv.style.transform = `scale(${Math.sqrt(1 - stretch ** 2)}, ${stretch + 1})`;
+
+        lyricsDiv.style.letterSpacing = `${stretch * 50}px`
     }
 };
 
@@ -45,6 +59,7 @@ player.addListener({
 });
 
 const lyrics = document.querySelector("#text");
+const lyricsDiv = document.querySelector("#lyrics");
 
 const playBtns = document.querySelectorAll(".play");
 const jumpBtn = document.querySelector("#jump");
@@ -60,9 +75,12 @@ const positionEl = document.querySelector("#position strong");
 const artistSpan = document.querySelector("#artist-name span");
 const songSpan = document.querySelector("#song-name span");
 
-const maxTextSize = 10
-const minTextSize = 2
+const maxTextSize = 8;
+const minTextSize = 4;
+
 let textSize = maxTextSize;
+let textSizeDelta = textSize;
+let stretch = 0;
 
 const songList = [
     ["https://piapro.jp/t/hZ35/20240130103028", 4592293, 2727635, 2824326, 59415, 13962],
@@ -82,8 +100,13 @@ const isValidUrl = urlString => {
 }
 
 const loadSong = (value, custom) => {
+    player.video && player.requestPause();
+
+    lyricsDiv.style.fontSize = "1em";
+    lyricsDiv.style.transform = "scale(1, 1)";
+    lyricsDiv.style.letterSpacing = "0px";
+
     lyrics.textContent = "loading...";
-    customSong.style.display = "none";
     songSpan.textContent = "";
     artistSpan.textContent = "";
 
@@ -100,10 +123,16 @@ const loadSong = (value, custom) => {
                 lyricId: songList[value][4],
                 lyricDiffId: songList[value][5]
             }
-        }).then(() => lyrics.textContent = "");
+        }).then(() => lyrics.textContent = "-");
     } else {
         if (isValidUrl(value) !== false) {
-            player.createFromSongUrl(value).then(() => lyrics.textContent = "");
+            player.createFromSongUrl(value).then(() => lyrics.textContent = "-");
+        } else {
+            lyrics.textContent = "invalid url";
+
+            document
+                .querySelectorAll("#control *")
+                .forEach((item) => (item.disabled = false));
         }
     }
 }
@@ -160,6 +189,7 @@ function onAppReady(app) {
             "change",
             () => {
                 if (songSelector.value >= 0) {
+                    customSong.style.display = "none";
                     loadSong(songSelector.value, false);
                 } else {
                     customSong.style.display = "inline";
@@ -208,21 +238,25 @@ function onThrottledTimeUpdate(position) {
     positionEl.textContent = String(Math.floor(position));
     progressBar.value = position / player.video.duration;
 
-    let ratio = player.getVocalAmplitude(position) / player.getMaxVocalAmplitude();
-    textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
-
-    lyrics.style.fontSize = textSize + "em";
+    if (position < player.video.firstChar.startTime) {
+        lyrics.textContent = "-";
+    }
 }
 
 function onPlay() {
-    // document.querySelector("#overlay").style.display = "none";
+    playBtns.forEach((playBtn) => playBtn.style.display = "none");
+    pauseBtn.style.display = "inline"
 }
 
 function onPause() {
-    document.querySelector("#text").textContent = "-";
+    playBtns.forEach((playBtn) => playBtn.style.display = "inline");
+    pauseBtn.style.display = "none"
 }
 
 function onStop() {
-    document.querySelector("#text").textContent = "-";
+    lyrics.textContent = "-";
+
+    playBtns.forEach((playBtn) => playBtn.style.display = "inline");
+    pauseBtn.style.display = "none"
 }
 

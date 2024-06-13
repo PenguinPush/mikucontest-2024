@@ -25,9 +25,9 @@
         <span id="position"><strong>-</strong> ms</span>
     </p>
     <div id="control" style="display: none;">
-        <button class="play" disabled>play</button>
+        <button class="play" disabled style="display: inline;">play</button>
+        <button id="pause" disabled style="display: none;">pause</button>
         <button id="jump" disabled>jump</button>
-        <button id="pause" disabled>pause</button>
         <button id="rewind" disabled>rewind</button>
         <input type="range" id="volume" min="0" max="100" value="100" disabled>
         <input type="range" id="progress" value="0" max="1" step="0.0001" disabled>
@@ -40,7 +40,8 @@
             <option value="5">The Marks / 2ouDNS</option>
             <option value="-1">custom</option>
         </select>
-        <input type="text" id="custom-song" style="display: none;" value="https://www.youtube.com/watch?v=XSLhsjepelI" disabled>
+        <input type="text" id="custom-song" style="display: none;" value="https://www.youtube.com/watch?v=XSLhsjepelI"
+               disabled>
     </div>
 </div>
 <script type="module" src="./src/App.jsx"></script>
