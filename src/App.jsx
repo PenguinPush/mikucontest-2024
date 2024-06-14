@@ -3,16 +3,12 @@ import {Player} from "textalive-app-api";
 
 import * as THREE from "three";
 
-import {TextGeometry} from "three/addons/geometries/TextGeometry.js";
-import {FontLoader} from "three/addons";
+import {CSS3DRenderer, CSS3DObject} from 'three/addons/renderers/CSS3DRenderer.js';
 
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
 
 // initialize variables
-const lyrics = document.querySelector("#text");
-const lyricsDiv = document.querySelector("#lyrics");
-
 const playBtns = document.querySelectorAll(".play");
 const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
@@ -39,23 +35,20 @@ const songList = [
 let player;
 let threeMng;
 let position = 0;
-let needUpdate = false;
 
 const maxTextSize = 8;
 const minTextSize = 6;
 let textSize = maxTextSize;
 let textSizeDelta = textSize;
 let stretch = 0
-let oldText = "";
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-let renderer, scene, can, ctx, camera, text;
+let camera, scene, renderer, lyrics3d;
+let text, root;
 
 // initialize main function
 function initMain() {
-    _initPlayer();
-
     if (WebGL.isWebGLAvailable()) {
         threeMng = new ThreeManager();
         window.addEventListener("resize", () => threeMng.resize());
@@ -64,6 +57,8 @@ function initMain() {
         const warning = WebGL.getWebGLErrorMessage();
         document.getElementById("view").appendChild(warning);
     }
+
+    _initPlayer();
 }
 
 // initialize textalive player
@@ -122,7 +117,7 @@ function onAppReady(app) {
 
         colorPicker.addEventListener(
             "change",
-            () => lyricsDiv.style.textShadow = `0.1em 0.08em ${colorPicker.value}`
+            () => lyrics3d.style.textShadow = `0.1em 0.08em ${colorPicker.value}`
         );
 
         volumeSlider.addEventListener(
@@ -176,7 +171,6 @@ function onVideoReady(v) {
     }
 
     position = 0;
-    needUpdate = true;
 
     console.log(lyricsList);
 }
@@ -196,10 +190,9 @@ function onTimeUpdate(pos) {
     progressBar.value = pos / player.video.duration;
 
     if (pos < player.video.firstChar.startTime) {
-        lyrics.textContent = "-";
+        lyrics3d.textContent = "-";
     }
 
-    needUpdate = true;
     position = pos;
 
 }
@@ -215,7 +208,7 @@ function onPause() {
 }
 
 function onStop() {
-    lyrics.textContent = "-";
+    lyrics3d.textContent = "-";
 
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
     pauseBtn.style.display = "none"
@@ -225,11 +218,12 @@ function loadSong(value, isCustom) {
     // song loading system
     player.video && player.requestPause();
 
-    lyricsDiv.style.fontSize = "1em";
-    lyricsDiv.style.transform = "scale(1, 1)";
-    lyricsDiv.style.letterSpacing = "0px";
+    lyrics3d.style.fontSize = "1em";
+    lyrics3d.style.letterSpacing = "0px";
 
-    lyrics.textContent = "loading...";
+    lyrics3d.scale
+
+    lyrics3d.textContent = "loading...";
     songSpan.textContent = "";
     artistSpan.textContent = "";
 
@@ -246,12 +240,12 @@ function loadSong(value, isCustom) {
                 lyricId: songList[value][4],
                 lyricDiffId: songList[value][5]
             }
-        }).then(() => lyrics.textContent = "-");
+        }).then(() => lyrics3d.textContent = "-");
     } else {
         if (isValidUrl(value)) {
-            player.createFromSongUrl(value).then(() => lyrics.textContent = "-");
+            player.createFromSongUrl(value).then(() => lyrics3d.textContent = "-");
         } else {
-            lyrics.textContent = "invalid url";
+            lyrics3d.textContent = "invalid url";
 
             document
                 .querySelectorAll("#control *")
@@ -263,32 +257,26 @@ function loadSong(value, isCustom) {
 function animateWord(pos, unit) {
     // set up the appearance of the words
     if (unit.contains(pos)) {
-        lyrics.textContent = unit.text;
+        lyrics3d.textContent = unit.text;
 
+        // calculate and apply text effects
         textSizeDelta = textSize
 
-        // resize text
         let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
         textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
 
-        lyricsDiv.style.fontSize = textSize + "em";
-
-        // calculate how much squash and stretch to apply
         stretch = (textSize - textSizeDelta) / 10;
-        lyricsDiv.style.transform = `scale(${Math.sqrt(1 - stretch ** 2)}, ${stretch + 1})`;
 
-        lyricsDiv.style.letterSpacing = `${stretch * 50}px`
+        lyrics3d.style.fontSize = textSize + "em";
+        // lyrics3d.style.transform = `scale(${Math.sqrt(1 - stretch ** 2)}, ${stretch + 1})`;
+        lyrics3d.style.letterSpacing = `${stretch * 50}px`
     }
 }
 
 function update() {
     // rerender the scene if something changed
-    if (needUpdate) {
-        threeMng.update(position);
-        threeMng.render();
-
-        needUpdate = false;
-    }
+    threeMng.update(position);
+    threeMng.render();
 
     window.requestAnimationFrame(() => update());
 }
@@ -297,70 +285,33 @@ function update() {
 class ThreeManager {
     constructor() {
         // set up renderer
-        renderer = new THREE.WebGLRenderer({antialias: true, alpha: false});
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer = new CSS3DRenderer();
         renderer.setSize(width, height);
         document.getElementById("view").appendChild(renderer.domElement);
 
-        this._initScene()
-    }
-
-    _initScene() {
         // set up scene
         scene = new THREE.Scene();
+        scene.scale.set(0.1, 0.1, 0.1);
         scene.background = new THREE.Color(0x2d2a2e)
-
-        can = document.createElement("canvas");
-        ctx = can.getContext("2d");
-
-        // load objects into scene
-        const loader = new FontLoader();
-        loader.load("src/assets/Noto Sans JP_Bold.json", (font) => {
-            const textGeometry = new TextGeometry(lyrics.textContent, {
-                font: font,
-                size: 1,
-                depth: 0.2,
-                curveSegments: 10
-            });
-
-            const material = new THREE.MeshBasicMaterial({color: 0xffffff});
-            text = new THREE.Mesh(textGeometry, material);
-
-            scene.add(text);
-        });
 
         // set up camera
         camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        camera.position.z = 30;
+        camera.position.z = 50;
         camera.lookAt(0, 0, 0);
+
+        this._loadScene()
+    }
+
+    _loadScene() {
+        // load objects into scene
+        lyrics3d = document.createElement("div")
+
+        text = new CSS3DObject(lyrics3d);
+        scene.add(text);
     }
 
     update(t) {
-        if (oldText !== lyrics.textContent) {
-            const loader = new FontLoader();
-            loader.load("src/assets/Noto Sans JP_Bold.json", (font) => {
-                const textGeometry = new TextGeometry(lyrics.textContent, {
-                    font: font,
-                    size: 1,
-                    depth: 0.2,
-                    curveSegments: 10
-                });
 
-                // refresh material
-                text.geometry.dispose();
-                text.material.dispose();
-
-                text.geometry = textGeometry;
-                text.material = new THREE.MeshBasicMaterial({color: 0xffffff});
-            });
-
-            console.log("text update")
-        }
-
-        text.geometry.center()
-        text.scale.set(textSize * Math.sqrt(1 - stretch ** 2), textSize * (stretch + 1), 1)
-
-        oldText = lyrics.textContent;
     }
 
     render() {
