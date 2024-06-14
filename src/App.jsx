@@ -3,10 +3,13 @@ import {Player} from "textalive-app-api";
 
 import * as THREE from "three";
 
-import {CSS3DRenderer, CSS3DObject} from 'three/addons/renderers/CSS3DRenderer.js';
+import {FontLoader} from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
+import {WebGLRenderer} from "three";
 
 // initialize variables
 const playBtns = document.querySelectorAll(".play");
@@ -44,8 +47,7 @@ let stretch = 0
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-let camera, scene, renderer, lyrics3d;
-let text, root;
+let camera, scene, renderer;
 
 // initialize main function
 function initMain() {
@@ -259,17 +261,21 @@ function animateWord(pos, unit) {
         lyrics3d.textContent = unit.text;
 
         // calculate and apply text effects
+        // if (textSize - 0.01 < textSizeDelta && textSizeDelta < textSize + 0.01){console.log(textSize, textSizeDelta)}
+        console.log(pos)
+        // console.log(player.getVocalAmplitude(pos))
+
         textSizeDelta = textSize
 
         let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
         textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
 
         stretch = (textSize - textSizeDelta);
+        stretch = Math.min(Math.max(-1, stretch), 1)
 
         lyrics3d.style.fontSize = textSize + "em";
         lyrics3d.style.transform = "translate(-50%, -50%) matrix3d(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)"
         lyrics3d.style.transform += ` scale(${Math.sqrt(1 + stretch ** 2) / 10}, ${Math.sqrt(1 - stretch ** 2) / 10})`;
-        console.log(stretch)
         lyrics3d.style.letterSpacing = `${stretch}px`
     }
 }
@@ -286,26 +292,38 @@ function update() {
 class ThreeManager {
     constructor() {
         // set up renderer
-        renderer = new CSS3DRenderer({antialias: true});
+        renderer = new WebGLRenderer({antialias: true});
         renderer.setSize(width, height, false);
+        renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(renderer.domElement);
 
         // set up scene
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2d2a2e);
 
         // set up camera
         camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        camera.position.z = 50;
+        camera.position.z = 75;
         camera.lookAt(0, 0, 0);
 
-        this._loadScene()
+        this._loadScene();
     }
 
     _loadScene() {
         // load objects into scene
-        lyrics3d = document.createElement("div")
-        text = new CSS3DObject(lyrics3d);
+        const text = new Text();
         scene.add(text);
+
+        text.text = 'Hello world!';
+        text.font = "src/assets/NotoSansJP-Bold.ttf"
+        text.fontSize = 12;
+
+        text.position.z = 0;
+        text.color = 0xFFFFFF;
+        text.anchorX = "50%";
+        text.anchorY = "50%";
+
+        text.sync();
     }
 
     update(t) {
@@ -320,7 +338,8 @@ class ThreeManager {
         width = window.innerWidth;
         height = window.innerHeight;
 
-        renderer.setSize(width, height);
+        renderer.setSize(width, height, false);
+        renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
         camera.updateProjectionMatrix();

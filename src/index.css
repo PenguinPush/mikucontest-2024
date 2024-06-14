@@ -17,10 +17,6 @@ body {
     top: 0;
     left: 0;
     z-index: -1;
-
-    font-size: 1em;
-    text-shadow: 0.6em 0.4em #007bff;
-    font-weight: bold;
 }
 
 #media {
