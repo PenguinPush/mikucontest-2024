@@ -219,9 +219,9 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
 
     lyrics3d.style.fontSize = "1em";
+    lyrics3d.style.transform = "translate(-50%, -50%) matrix3d(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)";
+    lyrics3d.style.transform += " scale(0.1, 0.1)";
     lyrics3d.style.letterSpacing = "0px";
-
-    lyrics3d.scale
 
     lyrics3d.textContent = "loading...";
     songSpan.textContent = "";
@@ -255,7 +255,6 @@ function loadSong(value, isCustom) {
 }
 
 function animateWord(pos, unit) {
-    // set up the appearance of the words
     if (unit.contains(pos)) {
         lyrics3d.textContent = unit.text;
 
@@ -265,11 +264,13 @@ function animateWord(pos, unit) {
         let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
         textSize = minTextSize + (maxTextSize - minTextSize) * Math.log(ratio * maxTextSize + 1) / Math.log(maxTextSize + 1)
 
-        stretch = (textSize - textSizeDelta) / 10;
+        stretch = (textSize - textSizeDelta);
 
         lyrics3d.style.fontSize = textSize + "em";
-        // lyrics3d.style.transform = `scale(${Math.sqrt(1 - stretch ** 2)}, ${stretch + 1})`;
-        lyrics3d.style.letterSpacing = `${stretch * 50}px`
+        lyrics3d.style.transform = "translate(-50%, -50%) matrix3d(1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)"
+        lyrics3d.style.transform += ` scale(${Math.sqrt(1 + stretch ** 2) / 10}, ${Math.sqrt(1 - stretch ** 2) / 10})`;
+        console.log(stretch)
+        lyrics3d.style.letterSpacing = `${stretch}px`
     }
 }
 
@@ -285,14 +286,12 @@ function update() {
 class ThreeManager {
     constructor() {
         // set up renderer
-        renderer = new CSS3DRenderer();
-        renderer.setSize(width, height);
+        renderer = new CSS3DRenderer({antialias: true});
+        renderer.setSize(width, height, false);
         document.getElementById("view").appendChild(renderer.domElement);
 
         // set up scene
         scene = new THREE.Scene();
-        scene.scale.set(0.1, 0.1, 0.1);
-        scene.background = new THREE.Color(0x2d2a2e)
 
         // set up camera
         camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
@@ -305,7 +304,6 @@ class ThreeManager {
     _loadScene() {
         // load objects into scene
         lyrics3d = document.createElement("div")
-
         text = new CSS3DObject(lyrics3d);
         scene.add(text);
     }
@@ -322,10 +320,10 @@ class ThreeManager {
         width = window.innerWidth;
         height = window.innerHeight;
 
+        renderer.setSize(width, height);
+
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-
-        renderer.setSize(width, height);
 
         this.render()
     }
