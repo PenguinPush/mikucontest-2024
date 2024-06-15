@@ -4,8 +4,10 @@ import {Player} from "textalive-app-api";
 import * as THREE from "three";
 
 import {Text} from 'troika-three-text'
-import {FirstPersonControls} from 'three/addons/controls/FirstPersonControls.js';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import CameraControls from 'camera-controls';
+
+CameraControls.install({THREE: THREE});
+
 
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
@@ -49,9 +51,11 @@ let isNewLyrics = false;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-let camera, scene, renderer, controls, clock, lyrics;
+let camera, scene, renderer, cameraControls, clock, lyrics;
 let pieceIndex = -1;
-let maxAngleX, maxAngleY;
+
+let mouseX = 0;
+let mouseY = 0;
 
 // initialize main function
 function initMain() {
@@ -299,13 +303,29 @@ class ThreeManager {
         camera.position.set(0, 0, 50);
         camera.lookAt(0, 0, 0);
 
-        // controls
+        // set up controls
         clock = new THREE.Clock();
 
-        controls = new FirstPersonControls(camera, renderer.domElement);
-        controls.lookSpeed = 0.05;
-        controls.movementSpeed = 0;
-        controls.enabled = false;
+        cameraControls = new CameraControls(camera, renderer.domElement);
+        cameraControls.minDistance = cameraControls.maxDistance = 0;
+        this.rotateStrength = 10;
+        this.movementStrength = 10;
+
+        cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
+        cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
+        cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
+        cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+
+        cameraControls.touches.one = CameraControls.ACTION.NONE;
+        cameraControls.touches.two = CameraControls.ACTION.NONE;
+        cameraControls.touches.three = CameraControls.ACTION.NONE;
+
+        cameraControls.saveState();
+
+        document.addEventListener("mousemove", (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+        })
 
         // set up scene
         scene = new THREE.Scene();
@@ -314,8 +334,7 @@ class ThreeManager {
         lyrics = new Text()
         scene.add(lyrics)
 
-        maxAngleX = Math.PI / 6;
-        controls.update(clock.getDelta())
+        cameraControls.update(clock.getDelta())
         this._loadScene();
     }
 
@@ -343,8 +362,24 @@ class ThreeManager {
         lyrics.fontSize = baseTextSize * textScale;
         lyrics.letterSpacing = stretch / 10;
         lyrics.scale.set(1 + (stretch) ** 3, 1 - (stretch) ** 3);
-
         lyrics.sync();
+
+        if (mouseX ** 2 + mouseY ** 2 < 1) {
+
+        }
+
+        lyrics.position.x = (mouseX) * innerWidth/25
+        lyrics.position.y = (-mouseY) * innerHeight/25
+
+        console.log(lyrics.position)
+
+        // cameraControls.moveTo(mouseX * this.movementStrength,
+        //     -mouseY * this.movementStrength, 0, true)
+        //
+        // cameraControls.lookInDirectionOf(mouseX * this.rotateStrength,
+        //     -mouseY * this.rotateStrength, -camera.position.z, true)
+
+        cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
     }
 
@@ -357,8 +392,6 @@ class ThreeManager {
 
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-
-        controls.handleResize();
 
         this.update()
     }
