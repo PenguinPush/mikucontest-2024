@@ -3,7 +3,8 @@ import {Player} from "textalive-app-api";
 
 import * as THREE from "three";
 
-import {FontLoader} from 'three/addons/loaders/FontLoader.js';
+import {Text} from 'troika-three-text'
+import {FirstPersonControls} from 'three/addons/controls/FirstPersonControls.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 import WebGL from "three/addons/capabilities/WebGL.js";
@@ -37,19 +38,20 @@ let player;
 let threeMng;
 let position = 0;
 
-const maxTextScale = 1.5;
-const minTextScale = 0.5;
+const maxTextScale = 1.1;
+const minTextScale = 0.9;
 const baseTextSize = 8;
 let textScale = maxTextScale;
 let textScaleDelta = textScale;
 let stretch = 0
-let lyricsText, lyricsTextOld;
+let lyricsTextOld;
 let isNewLyrics = false;
 
 let width = window.innerWidth;
 let height = window.innerHeight;
-let camera, scene, renderer, fontLoader, textGroup, boxGroup;
+let camera, scene, renderer, controls, clock, lyrics;
 let pieceIndex = -1;
+let maxAngleX, maxAngleY;
 
 // initialize main function
 function initMain() {
@@ -88,8 +90,6 @@ function _initPlayer() {
         onPause,
         onStop,
     });
-
-    player.fps = 60;
 }
 
 // player event handlers
@@ -123,7 +123,7 @@ function onAppReady(app) {
 
         colorPicker.addEventListener(
             "change",
-            () => console.log(`0.1em 0.08em ${colorPicker.value}`)
+            () => lyrics.outlineColor = colorPicker.value
         );
 
         volumeSlider.addEventListener(
@@ -196,7 +196,7 @@ function onTimeUpdate(pos) {
     progressBar.value = pos / player.video.duration;
 
     if (pos < player.video.firstChar.startTime) {
-        lyricsText = "-";
+        lyrics.text = "-";
     }
 
     position = pos;
@@ -214,7 +214,7 @@ function onPause() {
 }
 
 function onStop() {
-    lyricsText = "-";
+    lyrics.text = "-";
 
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
     pauseBtn.style.display = "none"
@@ -225,11 +225,11 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
     player.volume = volumeSlider.value
 
-    textScale = 8
+    textScale = 1
     textScaleDelta = 1
     stretch = 0
 
-    lyricsText = "loading...";
+    lyrics.text = "loading...";
     songSpan.textContent = "";
     artistSpan.textContent = "";
 
@@ -246,12 +246,12 @@ function loadSong(value, isCustom) {
                 lyricId: songList[value][4],
                 lyricDiffId: songList[value][5]
             }
-        }).then(() => lyricsText = "-");
+        }).then(() => lyrics.text = "-");
     } else {
         if (isValidUrl(value)) {
-            player.createFromSongUrl(value).then(() => lyricsText = "-");
+            player.createFromSongUrl(value).then(() => lyrics.text = "-");
         } else {
-            lyricsText = "invalid url";
+            lyrics.text = "invalid url";
 
             document
                 .querySelectorAll("#control *")
@@ -262,24 +262,25 @@ function loadSong(value, isCustom) {
 
 function animateWord(pos, unit) {
     if (unit.contains(pos)) {
-        lyricsText = unit.text;
-        isNewLyrics = lyricsText !== lyricsTextOld;
-        lyricsTextOld = lyricsText
-
-        // calculate text effects
-        textScaleDelta = textScale
-        let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
-
-        textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
-        stretch = (textScale - textScaleDelta);
-        stretch = Math.min(Math.max(-1, stretch), 1)
+        // update lyrics
+        lyrics.text = unit.text;
+        isNewLyrics = lyrics.text !== lyricsTextOld;
+        lyricsTextOld = lyrics.text
     }
+
+    // calculate text effects
+    textScaleDelta = textScale
+    let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
+
+    textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
+    stretch += (textScale - textScaleDelta) * 5;
+    stretch *= 0.9999;
+    stretch = Math.min(Math.max(-0.7, stretch), 0.7)
 }
 
 function update() {
     // rerender the scene if something changed
     threeMng.update(position);
-    threeMng.render();
 
     window.requestAnimationFrame(() => update());
 }
@@ -293,49 +294,57 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(renderer.domElement);
 
+        // set up camera
+        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+        camera.position.set(0, 0, 50);
+        camera.lookAt(0, 0, 0);
+
+        // controls
+        clock = new THREE.Clock();
+
+        controls = new FirstPersonControls(camera, renderer.domElement);
+        controls.lookSpeed = 0.05;
+        controls.movementSpeed = 0;
+        controls.enabled = false;
+
         // set up scene
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2d2a2e);
 
-        // set up camera
-        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        camera.position.z = 50;
-        camera.lookAt(0, 0, 0);
+        lyrics = new Text()
+        scene.add(lyrics)
 
+        maxAngleX = Math.PI / 6;
+        controls.update(clock.getDelta())
         this._loadScene();
     }
 
     _loadScene() {
         // load objects into scene
-        fontLoader = new FontLoader();
-        this._loadText();
+        lyrics.fontSize = baseTextSize;
+        lyrics.font = "src/assets/NotoSansJP-Bold.ttf"
+
+        lyrics.textAlign = "center"
+        lyrics.anchorX = "50%";
+        lyrics.anchorY = "50%";
+
+        lyrics.outlineOffsetX = "8%";
+        lyrics.outlineOffsetY = "6%";
+        lyrics.outlineColor = colorPicker.value;
+
+        lyrics.depth = 1;
     }
 
     update(t) {
         if (isNewLyrics) {
-            this._loadText();
+            console.log('new line')
         }
 
-        if (textGroup && textGroup.children.length > 0) {
-            if (isNewLyrics || (0 <= pieceIndex && pieceIndex <= Math.ceil(textGroup.children.length / 2))) {
-                if (isNewLyrics) {
-                    pieceIndex = 0;
-                }
+        lyrics.fontSize = baseTextSize * textScale;
+        lyrics.letterSpacing = stretch / 10;
+        lyrics.scale.set(1 + (stretch) ** 3, 1 - (stretch) ** 3);
 
-
-                console.log(pieceIndex);
-
-                if (textGroup.children[pieceIndex]) {
-                    textGroup.children[pieceIndex].visible = true;
-                    textGroup.children[textGroup.children.length - pieceIndex - 1].visible = true;
-                }
-
-                pieceIndex++;
-            }
-        }
-    }
-
-    render() {
+        lyrics.sync();
         renderer.render(scene, camera);
     }
 
@@ -349,46 +358,9 @@ class ThreeManager {
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
 
-        this.render()
-    }
+        controls.handleResize();
 
-    _loadText() {
-        fontLoader.load("src/assets/Noto Sans JP_Bold.json", function (font) {
-            scene.remove(textGroup);
-            scene.remove(boxGroup);
-
-            const shapes = font.generateShapes(lyricsText, baseTextSize);
-            textGroup = new THREE.Group();
-            boxGroup = new THREE.Group();
-
-            let i = 0;
-            // split text into their constituent lines
-            shapes.forEach((shape) => {
-                const geometry = new THREE.ShapeGeometry(shape, 1);
-                const textMaterial = new THREE.MeshBasicMaterial({color: 0xffffff, side: THREE.DoubleSide});
-
-                const mesh = new THREE.Mesh(geometry, textMaterial);
-                const boxHelper = new THREE.BoxHelper(mesh, new THREE.Color(`hsl(${i * 10}, 100%, 50%)`));
-
-                textGroup.add(mesh);
-                boxGroup.add(boxHelper);
-
-                i++;
-            });
-
-            const boundingBox = new THREE.Box3().setFromObject(textGroup);
-            const boundingBoxSize = new THREE.Vector3();
-            boundingBox.getSize(boundingBoxSize);
-
-            textGroup.position.x = -boundingBoxSize.x / 2;
-            textGroup.position.y = -boundingBoxSize.y / 2;
-
-            boxGroup.position.x = -boundingBoxSize.x / 2;
-            boxGroup.position.y = -boundingBoxSize.y / 2;
-
-            scene.add(textGroup);
-            scene.add(boxGroup);
-        });
+        this.update()
     }
 }
 

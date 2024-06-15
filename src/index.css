@@ -2,6 +2,12 @@ body {
     background-color: #2d2a2e;
     color: #ffffff;
     font-family: 'Noto Sans JP', sans-serif;
+
+    pointer-events: none;
+}
+
+#media, #header, #footer, #control, #view {
+    pointer-events: auto;
 }
 
 #container {
