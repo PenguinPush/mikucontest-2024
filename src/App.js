@@ -8,7 +8,6 @@ import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
 
-
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
 
@@ -36,26 +35,33 @@ const songList = [
     ["https://piapro.jp/t/xEA7/20240202002556", 4592300, 2727640, 2824331, 59420, 13967]
 ];
 
-let player;
-let threeMng;
-let position = 0;
-
+// constants
 const maxTextScale = 1.1;
 const minTextScale = 0.9;
 const baseTextSize = 8;
+const fov = 60;
+
+// textalive
+let player;
+let position = 0;
+
+// threejs
+let threeMng;
+let camera, scene, renderer, cameraControls, clock, lyrics;
+let width = window.innerWidth;
+let height = window.innerHeight;
+
+// text scaling
 let textScale = maxTextScale;
 let textScaleDelta = textScale;
-let stretch = 0
+let stretch = 0;
 let lyricsTextOld;
 let isNewLyrics = false;
 
-let width = window.innerWidth;
-let height = window.innerHeight;
-let camera, scene, renderer, cameraControls, clock, lyrics;
-let pieceIndex = -1;
-
-let mouseX = 0;
-let mouseY = 0;
+// input
+let inputX = 0;
+let inputY = 0;
+let isTouching = false;
 
 // initialize main function
 function initMain() {
@@ -162,7 +168,13 @@ function onAppReady(app) {
 
     if (!app.songUrl) {
         console.log("first load")
-        loadSong(songSelector.value, false);
+        if (songSelector.value >= 0) {
+            customSong.style.display = "none";
+            loadSong(songSelector.value, false);
+        } else {
+            customSong.style.display = "inline";
+            loadSong(customSong.value, true);
+        }
     }
 }
 
@@ -299,8 +311,8 @@ class ThreeManager {
         document.getElementById("view").appendChild(renderer.domElement);
 
         // set up camera
-        camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-        camera.position.set(0, 0, 50);
+        camera = new THREE.PerspectiveCamera(fov / (width / height) / 2, width / height, 0.1, 1000);
+        camera.position.set(0, 0, 150);
         camera.lookAt(0, 0, 0);
 
         // set up controls
@@ -308,8 +320,8 @@ class ThreeManager {
 
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
-        this.rotateStrength = 10;
-        this.movementStrength = 10;
+        this.rotateStrength = 8;
+        this.movementStrength = 6;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -322,9 +334,36 @@ class ThreeManager {
 
         cameraControls.saveState();
 
+        // track the cursor/finger position
         document.addEventListener("mousemove", (event) => {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+            this.normalizeInput(event.clientX, event.clientY);
+            isTouching = true;
+        })
+
+        document.addEventListener("touchstart", (event) => {
+            if (event.touches.length === 1) {
+                this.normalizeInput(event.touches[0].clientX, event.touches[0].clientY);
+                isTouching = true;
+            }
+        })
+
+        document.addEventListener("touchmove", (event) => {
+            if (event.touches.length === 1) {
+                this.normalizeInput(event.touches[0].clientX, event.touches[0].clientY);
+                isTouching = true;
+            }
+        })
+
+        document.addEventListener("touchend", (event) => {
+            setTimeout(() => {
+                isTouching = false;
+            }, 30);
+        })
+
+        document.addEventListener("touchcancel", (event) => {
+            setTimeout(() => {
+                isTouching = false;
+            }, 30);
         })
 
         // set up scene
@@ -364,20 +403,26 @@ class ThreeManager {
         lyrics.scale.set(1 + (stretch) ** 3, 1 - (stretch) ** 3);
         lyrics.sync();
 
-        if (mouseX ** 2 + mouseY ** 2 < 1) {
+        let multiplierX = 1;
+        let multiplierY = 1;
 
+        // stop the tracking if it exits the radius
+        if (inputX ** 2 + inputY ** 2 > 1) {
+            multiplierX = 1 / Math.sqrt(inputX ** 2 + inputY ** 2);
+            multiplierY = 1 / Math.sqrt(inputX ** 2 + inputY ** 2);
         }
 
-        lyrics.position.x = (mouseX) * innerWidth/25
-        lyrics.position.y = (-mouseY) * innerHeight/25
+        // rotate and move the camera a little
+        if (isTouching) {
+            cameraControls.moveTo(inputX * this.movementStrength * multiplierX,
+                inputY * this.movementStrength * multiplierY, 0, true)
 
-        console.log(lyrics.position)
-
-        // cameraControls.moveTo(mouseX * this.movementStrength,
-        //     -mouseY * this.movementStrength, 0, true)
-        //
-        // cameraControls.lookInDirectionOf(mouseX * this.rotateStrength,
-        //     -mouseY * this.rotateStrength, -camera.position.z, true)
+            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX,
+                inputY * this.rotateStrength * multiplierY, -camera.position.z, true)
+        } else {
+            cameraControls.moveTo(0, 0, 0, true);
+            cameraControls.lookInDirectionOf(0, 0, -camera.position.z, true);
+        }
 
         cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
@@ -391,9 +436,16 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
+        camera.fov = Math.min(fov / camera.aspect / 2, 120);
+
         camera.updateProjectionMatrix();
 
         this.update()
+    }
+
+    normalizeInput(clientX, clientY) {
+        inputX = (clientX / window.innerWidth) * 2 - 1;
+        inputY = -(clientY / window.innerHeight) * 2 + 1;
     }
 }
 
