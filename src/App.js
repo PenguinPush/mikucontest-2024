@@ -3,6 +3,7 @@ import {Player} from "textalive-app-api";
 
 import * as THREE from "three";
 
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Text} from 'troika-three-text'
 import CameraControls from 'camera-controls';
 
@@ -311,8 +312,12 @@ class ThreeManager {
         document.getElementById("view").appendChild(renderer.domElement);
 
         // set up camera
-        camera = new THREE.PerspectiveCamera(fov / (width / height) / 2, width / height, 0.1, 1000);
-        camera.position.set(0, 0, 150);
+        this.cameraPos = [[-3.5, 3.7, 1], [90, 0, -120]];
+
+        camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
+            width / height, 0.1, 1000);
+        camera.position.set(...this.cameraPos[0]);
+        camera.rotation.set(...this.cameraPos[1]);
         camera.lookAt(0, 0, 0);
 
         // set up controls
@@ -366,19 +371,25 @@ class ThreeManager {
             }, 30);
         })
 
+        document.addEventListener("mouseleave", (event) => {
+            setTimeout(() => {
+                isTouching = false;
+            }, 30);
+        })
+
         // set up scene
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2d2a2e);
-
-        lyrics = new Text()
-        scene.add(lyrics)
 
         cameraControls.update(clock.getDelta())
         this._loadScene();
     }
 
     _loadScene() {
-        // load objects into scene
+        // load lyrics into scene
+        lyrics = new Text()
+        scene.add(lyrics)
+
         lyrics.fontSize = baseTextSize;
         lyrics.font = "src/assets/NotoSansJP-Bold.ttf"
 
@@ -390,38 +401,56 @@ class ThreeManager {
         lyrics.outlineOffsetY = "6%";
         lyrics.outlineColor = colorPicker.value;
 
-        lyrics.depth = 1;
+        lyrics.sdfGlyphSize = 128;
+
+        if (camera.aspect < 0.75) {
+            lyrics.maxWidth = 1;
+            lyrics.overflowWrap = "break-word";
+        } else {
+            lyrics.maxWidth = Infinity;
+            lyrics.overflowWrap = "none";
+        }
+
+        // load the environment
+        const loader = new GLTFLoader();
+
+        loader.load("src/assets/bedroom_base.glb", function (gltf) {
+            let object = gltf.scene;
+            const testMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, side: THREE.BackSide})
+
+            object.traverse((item) => {
+                if (item.isMesh) object.material = testMaterial;
+            })
+
+            scene.add(object);
+        })
     }
 
     update(t) {
-        if (isNewLyrics) {
-            console.log('new line')
-        }
-
         lyrics.fontSize = baseTextSize * textScale;
         lyrics.letterSpacing = stretch / 10;
         lyrics.scale.set(1 + (stretch) ** 3, 1 - (stretch) ** 3);
         lyrics.sync();
 
-        let multiplierX = 1;
-        let multiplierY = 1;
+        let multiplierX = 100 / camera.fov;
+        let multiplierY = 100 / camera.fov;
 
         // stop the tracking if it exits the radius
         if (inputX ** 2 + inputY ** 2 > 1) {
-            multiplierX = 1 / Math.sqrt(inputX ** 2 + inputY ** 2);
-            multiplierY = 1 / Math.sqrt(inputX ** 2 + inputY ** 2);
+            multiplierX = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
+            multiplierY = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
         }
 
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.moveTo(inputX * this.movementStrength * multiplierX,
-                inputY * this.movementStrength * multiplierY, 0, true)
+            cameraControls.moveTo(inputX * this.movementStrength * multiplierX + this.cameraPos[0][0],
+                inputY * this.movementStrength * multiplierY + this.cameraPos[0][1], 0, true)
 
-            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX,
-                inputY * this.rotateStrength * multiplierY, -camera.position.z, true)
+            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX + this.cameraPos[1][0],
+                inputY * this.rotateStrength * multiplierY + this.cameraPos[1][1], -camera.position.z, true)
         } else {
-            cameraControls.moveTo(0, 0, 0, true);
-            cameraControls.lookInDirectionOf(0, 0, -camera.position.z, true);
+            cameraControls.moveTo(...this.cameraPos[0], true);
+            cameraControls.lookInDirectionOf(...this.cameraPos[1], true);
         }
 
         cameraControls.update(clock.getDelta())
@@ -436,10 +465,17 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
-        camera.fov = Math.min(fov / camera.aspect / 2, 120);
+        camera.fov = Math.max(50, Math.min(fov / camera.aspect / 2, 90));
+
+        if (camera.aspect < 0.75) {
+            lyrics.maxWidth = 0;
+            lyrics.overflowWrap = "break-word";
+        } else {
+            lyrics.maxWidth = Infinity;
+            lyrics.overflowWrap = "none";
+        }
 
         camera.updateProjectionMatrix();
-
         this.update()
     }
 
