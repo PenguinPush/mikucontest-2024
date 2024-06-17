@@ -52,6 +52,8 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
+const cameraPos = [[-3.5, 3.7, 1], [90, 0, -120]];
+
 // text scaling
 let textScale = maxTextScale;
 let textScaleDelta = textScale;
@@ -312,12 +314,10 @@ class ThreeManager {
         document.getElementById("view").appendChild(renderer.domElement);
 
         // set up camera
-        this.cameraPos = [[-3.5, 3.7, 1], [90, 0, -120]];
-
         camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
             width / height, 0.1, 1000);
-        camera.position.set(...this.cameraPos[0]);
-        camera.rotation.set(...this.cameraPos[1]);
+        camera.position.set(...cameraPos[0]);
+        camera.rotation.set(...cameraPos[1]);
         camera.lookAt(0, 0, 0);
 
         // set up controls
@@ -443,16 +443,17 @@ class ThreeManager {
 
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.moveTo(inputX * this.movementStrength * multiplierX + this.cameraPos[0][0],
-                inputY * this.movementStrength * multiplierY + this.cameraPos[0][1], 0, true)
+            cameraControls.moveTo(inputX * this.movementStrength * multiplierX + cameraPos[0][0],
+                inputY * this.movementStrength * multiplierY + cameraPos[0][1], 0, true)
 
-            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX + this.cameraPos[1][0],
-                inputY * this.rotateStrength * multiplierY + this.cameraPos[1][1], -camera.position.z, true)
+            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX,
+                inputY * this.rotateStrength * multiplierY, -camera.position.z, true)
         } else {
-            cameraControls.moveTo(...this.cameraPos[0], true);
-            cameraControls.lookInDirectionOf(...this.cameraPos[1], true);
+            cameraControls.moveTo(...cameraPos[0], true);
+            cameraControls.rotateTo(...this.convertAngles(...cameraPos[1]), true);
         }
 
+        console.log(...this.convertAngles(...cameraPos[1]))
         cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
     }
@@ -482,6 +483,13 @@ class ThreeManager {
     normalizeInput(clientX, clientY) {
         inputX = (clientX / window.innerWidth) * 2 - 1;
         inputY = -(clientY / window.innerHeight) * 2 + 1;
+    }
+
+    convertAngles(x, y, z) {
+        const theta = Math.acos(z / Math.sqrt(x * x + y * y + z * z));
+        const phi = Math.atan2(y, x);
+
+        return [theta, phi];
     }
 }
 
