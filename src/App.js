@@ -52,7 +52,7 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [[-3.5, 3.7, 1], [90, 0, -120]];
+const cameraPos = [[-3.5, 3.7, 50], [2.498, 0]];
 
 // text scaling
 let textScale = maxTextScale;
@@ -316,17 +316,15 @@ class ThreeManager {
         // set up camera
         camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
             width / height, 0.1, 1000);
-        camera.position.set(...cameraPos[0]);
-        camera.rotation.set(...cameraPos[1]);
-        camera.lookAt(0, 0, 0);
 
         // set up controls
         clock = new THREE.Clock();
 
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
-        this.rotateStrength = 8;
-        this.movementStrength = 6;
+        cameraControls.setOrbitPoint(0, 0, 0)
+        this.rotateStrength = 1;
+        this.movementStrength = 0.5;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -337,6 +335,10 @@ class ThreeManager {
         cameraControls.touches.two = CameraControls.ACTION.NONE;
         cameraControls.touches.three = CameraControls.ACTION.NONE;
 
+        cameraControls.moveTo(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
+        cameraControls.rotateTo(cameraPos[1][0], cameraPos[1][1] + Math.PI / 4);
+
+        cameraControls.update(clock.getDelta())
         cameraControls.saveState();
 
         // track the cursor/finger position
@@ -381,7 +383,6 @@ class ThreeManager {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2d2a2e);
 
-        cameraControls.update(clock.getDelta())
         this._loadScene();
     }
 
@@ -441,19 +442,23 @@ class ThreeManager {
             multiplierY = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
         }
 
+        this.rotateStrength = 1000;
+
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.moveTo(inputX * this.movementStrength * multiplierX + cameraPos[0][0],
-                inputY * this.movementStrength * multiplierY + cameraPos[0][1], 0, true)
+            cameraControls.moveTo(cameraPos[0][0] + inputX * this.movementStrength * multiplierX,
+                cameraPos[0][1] + inputY * this.movementStrength * multiplierY, cameraPos[0][2], true)
 
-            cameraControls.lookInDirectionOf(inputX * this.rotateStrength * multiplierX,
-                inputY * this.rotateStrength * multiplierY, -camera.position.z, true)
+            cameraControls.rotateTo(Math.PI, 0, true)
         } else {
-            cameraControls.moveTo(...cameraPos[0], true);
-            cameraControls.rotateTo(...this.convertAngles(...cameraPos[1]), true);
+            cameraControls.moveTo(cameraPos[0][0],
+                cameraPos[0][1], cameraPos[0][2], true)
+
+            cameraControls.rotate(1, 0, true)
         }
 
-        console.log(...this.convertAngles(...cameraPos[1]))
+        console.log(camera.rotation)
+
         cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
     }
@@ -483,13 +488,6 @@ class ThreeManager {
     normalizeInput(clientX, clientY) {
         inputX = (clientX / window.innerWidth) * 2 - 1;
         inputY = -(clientY / window.innerHeight) * 2 + 1;
-    }
-
-    convertAngles(x, y, z) {
-        const theta = Math.acos(z / Math.sqrt(x * x + y * y + z * z));
-        const phi = Math.atan2(y, x);
-
-        return [theta, phi];
     }
 }
 
