@@ -5,14 +5,13 @@ import * as THREE from "three";
 
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Text} from 'troika-three-text'
-import CameraControls from 'camera-controls';
-
-CameraControls.install({THREE: THREE});
-
+import { maxTextScale, minTextScale, baseTextSize, fov, songList } from "./constants";
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
+import CameraControls from 'camera-controls';
+CameraControls.install({THREE: THREE});
 
-// initialize variables
+// #region initialize variables
 const playBtns = document.querySelectorAll(".play");
 const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
@@ -27,7 +26,6 @@ const positionDisplay = document.querySelector("#position strong");
 const artistSpan = document.querySelector("#artist-name span");
 const songSpan = document.querySelector("#song-name span");
 
-import { maxTextScale, minTextScale, baseTextSize, fov, songList } from "./constants";
 
 // textalive
 let player;
@@ -39,7 +37,8 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [[-3.5, 3.7, 50], [2.498, 0]];
+const cameraPos = [-3.5, 3.7, 50];
+const cameraRot = [0, 1.5];
 
 // text scaling
 let textScale = maxTextScale;
@@ -52,6 +51,8 @@ let isNewLyrics = false;
 let inputX = 0;
 let inputY = 0;
 let isTouching = false;
+
+// #endregion
 
 // initialize main function
 function initMain() {
@@ -300,34 +301,19 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(renderer.domElement);
 
-        // set up camera
-        camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
-            width / height, 0.1, 1000);
-
-        // set up controls
         clock = new THREE.Clock();
 
-        cameraControls = new CameraControls(camera, renderer.domElement);
-        cameraControls.minDistance = cameraControls.maxDistance = 0;
-        cameraControls.setOrbitPoint(0, 0, 0)
-        this.rotateStrength = 1;
-        this.movementStrength = 0.5;
+        this.initCamera();
+        this.initControls();
 
-        cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+        // set up scene
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x2d2a2e);
 
-        cameraControls.touches.one = CameraControls.ACTION.NONE;
-        cameraControls.touches.two = CameraControls.ACTION.NONE;
-        cameraControls.touches.three = CameraControls.ACTION.NONE;
+        this._loadScene();
+    }
 
-        cameraControls.moveTo(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
-        cameraControls.rotateTo(cameraPos[1][0], cameraPos[1][1] + Math.PI / 4);
-
-        cameraControls.update(clock.getDelta())
-        cameraControls.saveState();
-
+    initControls(){
         // track the cursor/finger position
         document.addEventListener("mousemove", (event) => {
             this.normalizeInput(event.clientX, event.clientY);
@@ -365,12 +351,33 @@ class ThreeManager {
                 isTouching = false;
             }, 30);
         })
+    }
 
-        // set up scene
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x2d2a2e);
+    initCamera(){
+        camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
+        width / height, 0.1, 1000);
+        camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
+        cameraControls = new CameraControls(camera, renderer.domElement);
+        cameraControls.minDistance = cameraControls.maxDistance = 0;
 
-        this._loadScene();
+        this.movementStrength = 0.5;
+        this.rotateStrength = 0.5;
+
+        cameraControls.mouseButtons.left = CameraControls.ACTION.ROTATE;
+        cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
+        cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
+        cameraControls.mouseButtons.wheel = CameraControls.ACTION.ZOOM;
+
+        cameraControls.touches.one = CameraControls.ACTION.NONE;
+        cameraControls.touches.two = CameraControls.ACTION.NONE;
+        cameraControls.touches.three = CameraControls.ACTION.NONE;
+
+        cameraControls.moveTo(cameraPos[0], cameraPos[1], cameraPos[2], false);
+        cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
+
+        cameraControls.saveState();
+
+        cameraControls.update(clock.getDelta())
     }
 
     _loadScene() {
@@ -429,22 +436,19 @@ class ThreeManager {
             multiplierY = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
         }
 
-        this.rotateStrength = 1000;
-
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.moveTo(cameraPos[0][0] + inputX * this.movementStrength * multiplierX,
-                cameraPos[0][1] + inputY * this.movementStrength * multiplierY, cameraPos[0][2], true)
+            cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
+                cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
 
-            cameraControls.rotateTo(Math.PI, 0, true)
+            cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] - inputY * this.rotateStrength, true)
         } else {
-            cameraControls.moveTo(cameraPos[0][0],
-                cameraPos[0][1], cameraPos[0][2], true)
+            cameraControls.moveTo(cameraPos[0],
+                cameraPos[1], cameraPos[2], true)
 
-            cameraControls.rotate(1, 0, true)
+            cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
         }
 
-        console.log(camera.rotation)
 
         cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
