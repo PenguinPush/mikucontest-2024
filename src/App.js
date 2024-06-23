@@ -10,6 +10,7 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
 import CameraControls from 'camera-controls';
 CameraControls.install({THREE: THREE});
+import {cameraPosition} from "three/nodes";
 
 // #region initialize variables
 const playBtns = document.querySelectorAll(".play");
@@ -38,7 +39,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const cameraPos = [-3.5, 3.7, 50];
-const cameraRot = [0, 1.5];
+const cameraRot = [0, Math.PI/2];
 
 // text scaling
 let textScale = maxTextScale;
@@ -281,7 +282,7 @@ function animateWord(pos, unit) {
 
     textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
     stretch += (textScale - textScaleDelta) * 5;
-    stretch *= 0.9999;
+    stretch *= 0.9999; // decay
     stretch = Math.min(Math.max(-0.7, stretch), 0.7)
 }
 
@@ -301,17 +302,43 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(renderer.domElement);
 
+<<<<<<< HEAD
         clock = new THREE.Clock();
 
         this.initCamera();
         this.initControls();
+=======
+        // set up camera
+        camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
+            width / height, 0.1, 1000);
+        camera.position.set(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
+
+        // set up controls
+        clock = new THREE.Clock();
+
+        cameraControls = new CameraControls(camera, renderer.domElement);
+        cameraControls.minDistance = cameraControls.maxDistance = 0;
+        this.rotateStrength = 0.05;
+        this.movementStrength = 0.5;
+>>>>>>> d30645d45bf8820aa1b0cc795357f5cdaa7f3897
 
         // set up scene
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x2d2a2e);
 
+<<<<<<< HEAD
         this._loadScene();
     }
+=======
+        cameraControls.touches.one = CameraControls.ACTION.NONE;
+        cameraControls.touches.two = CameraControls.ACTION.NONE;
+        cameraControls.touches.three = CameraControls.ACTION.NONE;
+
+        cameraControls.moveTo(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
+
+        cameraControls.update(clock.getDelta())
+        cameraControls.saveState();
+>>>>>>> d30645d45bf8820aa1b0cc795357f5cdaa7f3897
 
     initControls(){
         // track the cursor/finger position
@@ -441,12 +468,21 @@ class ThreeManager {
             cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
                 cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
 
+<<<<<<< HEAD
             cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] - inputY * this.rotateStrength, true)
+=======
+            cameraControls.rotateTo(cameraPos[1][0] - inputX * this.rotateStrength * multiplierX,
+                cameraPos[1][1] + inputY * this.rotateStrength * multiplierY, true)
+>>>>>>> d30645d45bf8820aa1b0cc795357f5cdaa7f3897
         } else {
             cameraControls.moveTo(cameraPos[0],
                 cameraPos[1], cameraPos[2], true)
 
+<<<<<<< HEAD
             cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
+=======
+            cameraControls.rotateTo(cameraPos[1][0], cameraPos[1][1], true)
+>>>>>>> d30645d45bf8820aa1b0cc795357f5cdaa7f3897
         }
 
 
