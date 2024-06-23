@@ -308,9 +308,8 @@ class ThreeManager {
 
         // set up scene
         scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x2d2a2e);
-
         this._loadScene();
+        this.loadLyrics();
     }
 
     initControls(){
@@ -363,10 +362,10 @@ class ThreeManager {
         this.movementStrength = 0.5;
         this.rotateStrength = 0.5;
 
-        cameraControls.mouseButtons.left = CameraControls.ACTION.ROTATE;
+        cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.wheel = CameraControls.ACTION.ZOOM;
+        cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
 
         cameraControls.touches.one = CameraControls.ACTION.NONE;
         cameraControls.touches.two = CameraControls.ACTION.NONE;
@@ -380,8 +379,7 @@ class ThreeManager {
         cameraControls.update(clock.getDelta())
     }
 
-    _loadScene() {
-        // load lyrics into scene
+    loadLyrics(){
         lyrics = new Text()
         scene.add(lyrics)
 
@@ -405,7 +403,10 @@ class ThreeManager {
             lyrics.maxWidth = Infinity;
             lyrics.overflowWrap = "none";
         }
+    }
 
+    _loadScene() {
+        scene.background = new THREE.Color(0x2d2a2e);
         // load the environment
         const loader = new GLTFLoader();
 
@@ -476,7 +477,7 @@ class ThreeManager {
         this.update()
     }
 
-    normalizeInput(clientX, clientY) {
+    normalizeInput(clientX, clientY, windowWidth, windowHeight) {
         inputX = (clientX / window.innerWidth) * 2 - 1;
         inputY = -(clientY / window.innerHeight) * 2 + 1;
     }
