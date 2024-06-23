@@ -11,6 +11,7 @@ CameraControls.install({THREE: THREE});
 
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
+import {cameraPosition} from "three/nodes";
 
 // initialize variables
 const playBtns = document.querySelectorAll(".play");
@@ -52,7 +53,8 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [[-3.5, 3.7, 50], [2.498, 0]];
+// const cameraPos = [[-3.5, 3.7, 50], [0, 0]];
+const cameraPos = [[0, 0, 50], [0, Math.PI/2]];
 
 // text scaling
 let textScale = maxTextScale;
@@ -293,7 +295,7 @@ function animateWord(pos, unit) {
 
     textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
     stretch += (textScale - textScaleDelta) * 5;
-    stretch *= 0.9999;
+    stretch *= 0.9999; // decay
     stretch = Math.min(Math.max(-0.7, stretch), 0.7)
 }
 
@@ -316,14 +318,14 @@ class ThreeManager {
         // set up camera
         camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
             width / height, 0.1, 1000);
+        camera.position.set(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
 
         // set up controls
         clock = new THREE.Clock();
 
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
-        cameraControls.setOrbitPoint(0, 0, 0)
-        this.rotateStrength = 1;
+        this.rotateStrength = 0.05;
         this.movementStrength = 0.5;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
@@ -336,7 +338,6 @@ class ThreeManager {
         cameraControls.touches.three = CameraControls.ACTION.NONE;
 
         cameraControls.moveTo(cameraPos[0][0], cameraPos[0][1], cameraPos[0][2]);
-        cameraControls.rotateTo(cameraPos[1][0], cameraPos[1][1] + Math.PI / 4);
 
         cameraControls.update(clock.getDelta())
         cameraControls.saveState();
@@ -442,19 +443,18 @@ class ThreeManager {
             multiplierY = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
         }
 
-        this.rotateStrength = 1000;
-
         // rotate and move the camera a little
         if (isTouching) {
             cameraControls.moveTo(cameraPos[0][0] + inputX * this.movementStrength * multiplierX,
                 cameraPos[0][1] + inputY * this.movementStrength * multiplierY, cameraPos[0][2], true)
 
-            cameraControls.rotateTo(Math.PI, 0, true)
+            cameraControls.rotateTo(cameraPos[1][0] - inputX * this.rotateStrength * multiplierX,
+                cameraPos[1][1] + inputY * this.rotateStrength * multiplierY, true)
         } else {
             cameraControls.moveTo(cameraPos[0][0],
                 cameraPos[0][1], cameraPos[0][2], true)
 
-            cameraControls.rotate(1, 0, true)
+            cameraControls.rotateTo(cameraPos[1][0], cameraPos[1][1], true)
         }
 
         console.log(camera.rotation)
