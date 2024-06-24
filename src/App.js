@@ -420,6 +420,11 @@ class ThreeManager {
 
             scene.add(object);
         })
+
+        const ambientLight = new THREE.AmbientLight()
+        ambientLight.color = new THREE.Color(0xffffff)
+        ambientLight.intensity = 0.3
+        scene.add(ambientLight)
     }
 
     update(t) {
