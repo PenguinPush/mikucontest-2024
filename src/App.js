@@ -359,8 +359,8 @@ class ThreeManager {
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
 
-        this.movementStrength = 0.5;
-        this.rotateStrength = 0.5;
+        this.movementStrength = 1;
+        this.rotateStrength = 0.05;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -442,7 +442,7 @@ class ThreeManager {
             cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
                 cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
 
-            cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] - inputY * this.rotateStrength, true)
+            cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
         } else {
             cameraControls.moveTo(cameraPos[0],
                 cameraPos[1], cameraPos[2], true)
