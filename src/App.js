@@ -140,10 +140,10 @@ function onAppReady(app) {
         songSelector.addEventListener(
             "change",
             () => {
-                if (songSelector.value >= 0) {
+                if (songSelector.value >= 0) { // non-custom song
                     customSong.style.display = "none";
                     loadSong(songSelector.value, false);
-                } else {
+                } else { // custom song
                     customSong.style.display = "inline";
                     loadSong(customSong.value, true);
                 }
@@ -159,10 +159,10 @@ function onAppReady(app) {
 
     if (!app.songUrl) {
         console.log("first load")
-        if (songSelector.value >= 0) {
+        if (songSelector.value >= 0) { // non-custom song
             customSong.style.display = "none";
             loadSong(songSelector.value, false);
-        } else {
+        } else { // custom song
             customSong.style.display = "inline";
             loadSong(customSong.value, true);
         }
@@ -212,19 +212,19 @@ function onTimeUpdate(pos) {
 
 function onPlay() {
     playBtns.forEach((playBtn) => playBtn.style.display = "none");
-    pauseBtn.style.display = "inline"
+    pauseBtn.style.display = "inline" // toggle button to pause
 }
 
 function onPause() {
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
-    pauseBtn.style.display = "none"
+    pauseBtn.style.display = "none" // toggle button to play
 }
 
 function onStop() {
     lyrics.text = "-";
 
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
-    pauseBtn.style.display = "none"
+    pauseBtn.style.display = "none" // toggle button to play
 }
 
 function loadSong(value, isCustom) {
@@ -232,6 +232,7 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
     player.volume = volumeSlider.value
 
+    // reset text values
     textScale = 1
     textScaleDelta = 1
     stretch = 0
@@ -245,7 +246,7 @@ function loadSong(value, isCustom) {
         .forEach((item) => (item.disabled = true));
 
     if (!isCustom) {
-        player.createFromSongUrl(songList[value][0], {
+        player.createFromSongUrl(songList[value][0], { // fetch from constants
             video: {
                 beatId: songList[value][1],
                 chordId: songList[value][2],
@@ -254,7 +255,7 @@ function loadSong(value, isCustom) {
                 lyricDiffId: songList[value][5]
             }
         }).then(() => lyrics.text = "-");
-    } else {
+    } else { // fetch from songle
         if (isValidUrl(value)) {
             player.createFromSongUrl(value).then(() => lyrics.text = "-");
         } else {
@@ -286,9 +287,8 @@ function animateWord(pos, unit) {
 }
 
 function update() {
-    // rerender the scene if something changed
+    // rerender the scene
     threeMng.update(position);
-
     window.requestAnimationFrame(() => update());
 }
 
@@ -454,7 +454,6 @@ class ThreeManager {
 
             cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
         }
-
 
         cameraControls.update(clock.getDelta())
         renderer.render(scene, camera);
