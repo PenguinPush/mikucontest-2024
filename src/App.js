@@ -362,7 +362,6 @@ class ThreeManager {
 
         this.movementStrength = 0.1;
         this.rotateStrength = 0.1;
-
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
@@ -453,7 +452,7 @@ class ThreeManager {
 
         // rotate and move the camera a little
         if (isTouching) {
-             cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
+             cameraControls.moveTo(cameraPos[0] - inputX * this.movementStrength * multiplierX,
                 cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
             cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
         } else {
