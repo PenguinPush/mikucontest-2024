@@ -453,13 +453,12 @@ class ThreeManager {
 
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.truck(inputX * 0.01, -inputY * 0.01, true)
-
+             cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
+                cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
             cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
         } else {
             cameraControls.moveTo(cameraPos[0],
                 cameraPos[1], cameraPos[2], true)
-
             cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
         }
 
