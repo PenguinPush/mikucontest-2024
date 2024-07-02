@@ -5,10 +5,11 @@ import * as THREE from "three";
 
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Text} from 'troika-three-text'
-import { maxTextScale, minTextScale, baseTextSize, fov, songList } from "./constants";
+import {maxTextScale, minTextScale, baseTextSize, fov, songList} from "./constants";
 import WebGL from "three/addons/capabilities/WebGL.js";
 import {isValidUrl} from "./utils";
 import CameraControls from 'camera-controls';
+
 CameraControls.install({THREE: THREE});
 
 // #region initialize variables
@@ -37,8 +38,8 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [-3.5, 3.7, 50];
-const cameraRot = [0, Math.PI/2];
+const cameraPos = [0.133595, 0.987664, -3.45954];
+const cameraRot = [80, Math.PI / 2];
 
 // text scaling
 let textScale = maxTextScale;
@@ -312,7 +313,7 @@ class ThreeManager {
         this.loadLyrics();
     }
 
-    initControls(){
+    initControls() {
         // track the cursor/finger position
         document.addEventListener("mousemove", (event) => {
             this.normalizeInput(event.clientX, event.clientY);
@@ -352,15 +353,15 @@ class ThreeManager {
         })
     }
 
-    initCamera(){
+    initCamera() {
         camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
-        width / height, 0.1, 1000);
+            width / height, 0.1, 1000);
         camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
 
-        this.movementStrength = 1;
-        this.rotateStrength = 0.05;
+        this.movementStrength = 0;
+        this.rotateStrength = 0.1;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -379,7 +380,7 @@ class ThreeManager {
         cameraControls.update(clock.getDelta())
     }
 
-    loadLyrics(){
+    loadLyrics() {
         lyrics = new Text()
         scene.add(lyrics)
 
@@ -412,10 +413,28 @@ class ThreeManager {
 
         loader.load("src/assets/bedroom_base.glb", function (gltf) {
             let object = gltf.scene;
-            const testMaterial = new THREE.MeshStandardMaterial({color: 0xffffff, side: THREE.BackSide})
 
             object.traverse((item) => {
-                if (item.isMesh) object.material = testMaterial;
+                if (item instanceof THREE.Light) {
+                    item.intensity = 10;
+
+                    console.log('Found a light in the GLTF model:');
+                    console.log('Color: ', item.color);
+                    console.log('Intensity: ', item.intensity);
+                    console.log('Position: ', item.position);
+                    console.log('Type: ', item.type);
+                }
+
+                if (item instanceof THREE.Camera) {
+                    console.log('Found a camera in the GLTF model:');
+                    console.log('Position: ', item.position);
+                    console.log('Rotation: ', item.rotation);
+                    console.log('FOV: ', item.fov);
+                    console.log('Aspect: ', item.aspect);
+                    console.log('Near: ', item.near);
+                    console.log('Far: ', item.far);
+                    console.log('Type: ', item.type);
+                }
             })
 
             scene.add(object);
