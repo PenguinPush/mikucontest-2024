@@ -1,7 +1,7 @@
 // constants
 export const maxTextScale = 1.1;
 export const minTextScale = 0.9;
-export const baseTextSize = 8;
+export const baseTextSize = 0.8;
 export const fov = 60;
 
 export const songList = [

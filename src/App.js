@@ -38,8 +38,8 @@ let camera, scene, renderer, cameraControls, clock, lyrics;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [0.133595, 0.987664, -3.45954];
-const cameraRot = [80, Math.PI / 2];
+const cameraPos = [2.333595, 1.1, -0.95954];
+const cameraRot = [Math.PI * 1.2, Math.PI / 2];
 
 // text scaling
 let textScale = maxTextScale;
@@ -360,7 +360,7 @@ class ThreeManager {
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
 
-        this.movementStrength = 0;
+        this.movementStrength = 0.1;
         this.rotateStrength = 0.1;
 
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
@@ -397,6 +397,9 @@ class ThreeManager {
 
         lyrics.sdfGlyphSize = 128;
 
+        lyrics.position.set(3.0118091583251953, 1.15475435256958, -0.049741268157958984);
+        lyrics.lookAt(camera.position);
+
         if (camera.aspect < 0.75) {
             lyrics.maxWidth = 1;
             lyrics.overflowWrap = "break-word";
@@ -416,33 +419,20 @@ class ThreeManager {
 
             object.traverse((item) => {
                 if (item instanceof THREE.Light) {
-                    item.intensity = 10;
-
-                    console.log('Found a light in the GLTF model:');
-                    console.log('Color: ', item.color);
-                    console.log('Intensity: ', item.intensity);
-                    console.log('Position: ', item.position);
-                    console.log('Type: ', item.type);
-                }
-
-                if (item instanceof THREE.Camera) {
-                    console.log('Found a camera in the GLTF model:');
-                    console.log('Position: ', item.position);
-                    console.log('Rotation: ', item.rotation);
-                    console.log('FOV: ', item.fov);
-                    console.log('Aspect: ', item.aspect);
-                    console.log('Near: ', item.near);
-                    console.log('Far: ', item.far);
-                    console.log('Type: ', item.type);
+                    item.intensity = 0;
                 }
             })
-
             scene.add(object);
+            console.log(camera.fov)
         })
+        const rectLight = new THREE.RectAreaLight(0xFFFFFF, 1, 5, 3);
+        rectLight.position.set(3.2118091583251953, 2.545475435256958, -0.049741268157958984);
+        rectLight.lookAt(rectLight.position.x, -10, rectLight.position.z);
+        scene.add(rectLight)
 
         const ambientLight = new THREE.AmbientLight()
         ambientLight.color = new THREE.Color(0xffffff)
-        ambientLight.intensity = 0.3
+        ambientLight.intensity = 1
         scene.add(ambientLight)
     }
 
@@ -463,8 +453,7 @@ class ThreeManager {
 
         // rotate and move the camera a little
         if (isTouching) {
-            cameraControls.moveTo(cameraPos[0] + inputX * this.movementStrength * multiplierX,
-                cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
+            cameraControls.truck(inputX * 0.01, -inputY * 0.01, true)
 
             cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
         } else {
