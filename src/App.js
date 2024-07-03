@@ -12,7 +12,7 @@ import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
 
-// #region initialize variables
+// initialize variables
 const playBtns = document.querySelectorAll(".play");
 const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
@@ -27,10 +27,44 @@ const positionDisplay = document.querySelector("#position strong");
 const artistSpan = document.querySelector("#artist-name span");
 const songSpan = document.querySelector("#song-name span");
 
+class LyricsData {
+    constructor() {
+        this.char = "";
+        this.word = "";
+        this.phrase = "";
+        this.text = "";
+
+        this.textOverride = false; // when true, display this.text instead of the desired character/word/phrase
+        this.textScale = 1;
+        this.textScaleDelta = 1;
+
+        this.ratio = 1;
+        this.stretch = 0;
+        this.maxAmplitude = 0;
+        this.valenceArousal = (0, 0);
+    }
+
+    // calculate text effects
+    update(amplitude, valenceArousal) {
+        this.textScaleDelta = this.textScale
+        this.ratio = amplitude / this.maxAmplitude;
+        this.valenceArousal = valenceArousal;
+
+        // algorithm that scales the text (but scales less when the scale is already extreme)
+        this.textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(this.ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
+
+        // determine squash & stretch from how the scale change
+        this.stretch += (this.textScale - this.textScaleDelta) * 5;
+        this.stretch *= 0.9999; // decay squash & stretch
+        this.stretch = Math.min(Math.max(-0.7, this.stretch), 0.7) // clamp squash & stretch
+
+    }
+}
 
 // textalive
 let player;
 let position = 0;
+let lyricsData = new LyricsData();
 
 // threejs
 let threeMng;
@@ -41,19 +75,10 @@ let height = window.innerHeight;
 const cameraPos = [2.333595, 1.1, -0.95954];
 const cameraRot = [Math.PI * 1.2, Math.PI / 2];
 
-// text scaling
-let textScale = maxTextScale;
-let textScaleDelta = textScale;
-let stretch = 0;
-let lyricsTextOld;
-let isNewLyrics = false;
-
 // input
 let inputX = 0;
 let inputY = 0;
 let isTouching = false;
-
-// #endregion
 
 // initialize main function
 function initMain() {
@@ -174,19 +199,24 @@ function onVideoReady(v) {
     artistSpan.textContent = player.data.song.artist.name;
     songSpan.textContent = player.data.song.name;
 
+    let c = player.video.firstChar;
     let w = player.video.firstWord;
-    let lyricsList = [w];
+    let p = player.video.firstPhrase;
 
+    while (c) {
+        c.animate = animateChar.bind(this);
+        c = c.next;
+    }
     while (w) {
         w.animate = animateWord.bind(this);
         w = w.next;
-
-        lyricsList.push(w)
+    }
+    while (p) {
+        p.animate = animatePhrase.bind(this);
+        p = p.next;
     }
 
     position = 0;
-
-    console.log(lyricsList);
 }
 
 function onTimerReady(t) {
@@ -208,7 +238,6 @@ function onTimeUpdate(pos) {
     }
 
     position = pos;
-
 }
 
 function onPlay() {
@@ -233,12 +262,11 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
     player.volume = volumeSlider.value
 
-    // reset text values
-    textScale = 1
-    textScaleDelta = 1
-    stretch = 0
+    // initialize lyrics data
+    lyricsData = new LyricsData()
+    lyricsData.textOverride = true;
+    lyricsData.text = "loading...";
 
-    lyrics.text = "loading...";
     songSpan.textContent = "";
     artistSpan.textContent = "";
 
@@ -255,12 +283,18 @@ function loadSong(value, isCustom) {
                 lyricId: songList[value][4],
                 lyricDiffId: songList[value][5]
             }
-        }).then(() => lyrics.text = "-");
+        }).then(() => {
+            lyricsData.text = "-";
+            lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
+        });
     } else { // fetch from songle
         if (isValidUrl(value)) {
-            player.createFromSongUrl(value).then(() => lyrics.text = "-");
+            player.createFromSongUrl(value).then(() => {
+                lyricsData.text = "-";
+                lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
+            });
         } else {
-            lyrics.text = "invalid url";
+            lyricsData.text = "invalid url";
 
             document
                 .querySelectorAll("#control *")
@@ -269,22 +303,19 @@ function loadSong(value, isCustom) {
     }
 }
 
+function animateChar(pos, unit) {
+    if (unit.contains(pos)) {lyricsData.char = unit.text;}
+    lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
+}
+
 function animateWord(pos, unit) {
-    if (unit.contains(pos)) {
-        // update lyrics
-        lyrics.text = unit.text;
-        isNewLyrics = lyrics.text !== lyricsTextOld;
-        lyricsTextOld = lyrics.text
-    }
+    if (unit.contains(pos)) {lyricsData.word = unit.text;}
+    lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
+}
 
-    // calculate text effects
-    textScaleDelta = textScale
-    let ratio = player.getVocalAmplitude(pos) / player.getMaxVocalAmplitude();
-
-    textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
-    stretch += (textScale - textScaleDelta) * 5;
-    stretch *= 0.9999; // decay
-    stretch = Math.min(Math.max(-0.7, stretch), 0.7)
+function animatePhrase(pos, unit) {
+    if (unit.contains(pos)) {lyricsData.phrase = unit.text;}
+    lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
 
 function update() {
@@ -360,7 +391,7 @@ class ThreeManager {
         cameraControls = new CameraControls(camera, renderer.domElement);
         cameraControls.minDistance = cameraControls.maxDistance = 0;
 
-        this.movementStrength = 0.1;
+        this.movementStrength = 0.15;
         this.rotateStrength = 0.1;
         cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -436,9 +467,10 @@ class ThreeManager {
     }
 
     update(t) {
-        lyrics.fontSize = baseTextSize * textScale;
-        lyrics.letterSpacing = stretch / 10;
-        lyrics.scale.set(1 + (stretch) ** 3, 1 - (stretch) ** 3);
+        lyrics.text = lyricsData.word;
+        lyrics.fontSize = baseTextSize * lyricsData.textScale;
+        lyrics.letterSpacing = lyricsData.stretch / 10;
+        lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         lyrics.sync();
 
         let multiplierX = 100 / camera.fov;
@@ -452,8 +484,19 @@ class ThreeManager {
 
         // rotate and move the camera a little
         if (isTouching) {
-             cameraControls.moveTo(cameraPos[0] - inputX * this.movementStrength * multiplierX,
-                cameraPos[1] + inputY * this.movementStrength * multiplierY, cameraPos[2], true)
+            let forward = camera.getWorldDirection(new THREE.Vector3()).negate();
+            let up = camera.up.clone();
+            let right = new THREE.Vector3().crossVectors(forward, up);
+
+            // Calculate the movement in each direction
+            let movementX = right.multiplyScalar(-inputX * this.movementStrength * multiplierX);
+            let movementY = up.multiplyScalar(inputY * this.movementStrength * multiplierY);
+
+            // Add the movements to the camera's base position to get the new position
+            let targetPosition = new THREE.Vector3(...cameraPos).add(movementX).add(movementY);
+
+            cameraControls.moveTo(targetPosition.x, targetPosition.y, targetPosition.z, true);
+
             cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
         } else {
             cameraControls.moveTo(cameraPos[0],
