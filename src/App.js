@@ -42,14 +42,15 @@ class LyricsData {
         this.ratio = 1;
         this.stretch = 0;
         this.maxAmplitude = 0;
-        this.valenceArousal = (0, 0);
+        this.valence = 0;
+        this.arousal = 0;
     }
 
     // calculate text effects
     update(amplitude, valenceArousal) {
         this.textScaleDelta = this.textScale
         this.ratio = amplitude / this.maxAmplitude;
-        this.valenceArousal = valenceArousal;
+        [this.valence, this.arousal] = this.normalizeValenceArousal(valenceArousal);
 
         // algorithm that scales the text (but scales less when the scale is already extreme)
         this.textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(this.ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
@@ -57,8 +58,11 @@ class LyricsData {
         // determine squash & stretch from how the scale change
         this.stretch += (this.textScale - this.textScaleDelta) * 5;
         this.stretch *= 0.9999; // decay squash & stretch
-        this.stretch = Math.min(Math.max(-0.7, this.stretch), 0.7) // clamp squash & stretch
+        this.stretch = THREE.MathUtils.clamp(this.stretch, -0.7, 0.7); // clamp squash & stretch
+    }
 
+    normalizeValenceArousal(valenceArousal) {
+        return [(valenceArousal.v + 1) / 2, (valenceArousal.a + 1) / 2];
     }
 }
 
@@ -386,7 +390,7 @@ class ThreeManager {
     }
 
     initCamera() {
-        camera = new THREE.PerspectiveCamera(Math.max(50, Math.min(fov / (width / height) / 2, 90)),
+        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) / 2, 50, 90),
             width / height, 0.1, 1000);
         camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         cameraControls = new CameraControls(camera, renderer.domElement);
@@ -434,7 +438,7 @@ class ThreeManager {
     }
 
     _loadScene() {
-        scene.background = new THREE.Color(0x2d2a2e);
+        scene.background = new THREE.Color(0x22eeff);
         // load the environment
         const loader = new GLTFLoader();
 
@@ -445,6 +449,7 @@ class ThreeManager {
             object.traverse((item) => {
                 if (item instanceof THREE.Light) {
                     item.intensity = 0;
+                    console.log(item.position)
                 }
 
                 if (item.material) {
@@ -470,23 +475,44 @@ class ThreeManager {
             scene.add(object);
         })
 
-        const rectLight = new THREE.RectAreaLight(0xFFFFFF, 1, 5, 3);
-        rectLight.position.set(3.2118091583251953, 2.545475435256958, -0.049741268157958984);
-        rectLight.lookAt(rectLight.position.x, -10, rectLight.position.z);
-        scene.add(rectLight)
+        const light1 = new THREE.PointLight(0xffffff, 1, 30);
+        light1.position.set(1.3041769266128, 2.0788733959198, -0.049741268157958984);
 
-        const ambientLight = new THREE.AmbientLight()
-        ambientLight.color = new THREE.Color(0xffffff)
-        ambientLight.intensity = 1
-        scene.add(ambientLight)
+        const light2 = new THREE.PointLight(0xffffff, 1, 30);
+        light2.position.set(5.1620965003967, 2.0788733959198, -0.049741268157958984);
+
+        this.moodLight = new THREE.RectAreaLight(0xffffff, 1, 5, 3);
+        this.moodLight.position.set(3.2118091583251953, 2.6788733959198, -0.049741268157958984);
+        this.moodLight.lookAt(this.moodLight.position.x, -10, this.moodLight.position.z);
+
+        scene.add(light1);
+        scene.add(light2);
+        scene.add(this.moodLight);
+
+        let ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        scene.add(ambientLight);
     }
 
     update(t) {
+        // update lyrics
         this.lyrics.text = lyricsData.word;
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         this.lyrics.sync();
+
+        // calculate colors to update lighting based on valence/arousal values
+        const r = (1.1 - lyricsData.valence) * 2
+        const b = (0.85 - lyricsData.arousal) * 2
+        const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2)
+
+        const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
+            THREE.MathUtils.clamp(g, 0, 1),
+            THREE.MathUtils.clamp(b, 0, 1))
+
+        this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
+        scene.background = moodColor;
+
 
         // set camera movement multiplier
         let multiplierX = 100 / camera.fov;
@@ -494,8 +520,8 @@ class ThreeManager {
 
         // scale down the tracking if it exits the radius
         if (inputX ** 2 + inputY ** 2 > 1) {
-            multiplierX = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
-            multiplierY = 100 / Math.sqrt(inputX ** 2 + inputY ** 2) / camera.fov;
+            multiplierX = 100 / (inputX ** 2 + inputY ** 2) ** 0.5 / camera.fov;
+            multiplierY = 100 / (inputX ** 2 + inputY ** 2) ** 0.5 / camera.fov;
         }
 
         // rotate and move the camera a little
@@ -533,7 +559,7 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
-        camera.fov = Math.max(50, Math.min(fov / camera.aspect / 2, 90));
+        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect / 2, 50, 90);
 
         camera.updateProjectionMatrix();
         this.update()
