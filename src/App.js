@@ -18,7 +18,6 @@ const playBtns = document.querySelectorAll(".play");
 const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
 const rewindBtn = document.querySelector("#rewind");
-const colorPicker = document.querySelector("#color");
 const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
 const songSelector = document.querySelector("#song");
@@ -75,7 +74,7 @@ let camera, scene, renderer, cameraControls, clock;
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const cameraPos = [2.333595, 1.1, -0.95954];
+const cameraPos = [2.233595, 1.1, -0.55954];
 const cameraRot = [Math.PI * 1.2, Math.PI / 2];
 
 // input
@@ -149,11 +148,6 @@ function onAppReady(app) {
         rewindBtn.addEventListener(
             "click",
             () => player.video && player.requestMediaSeek(0)
-        );
-
-        colorPicker.addEventListener(
-            "change",
-            () => lyrics.outlineColor = colorPicker.value
         );
 
         volumeSlider.addEventListener(
@@ -338,6 +332,9 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(renderer.domElement);
 
+        renderer.shadowMap.enabled = true;
+        // renderer.shadowMap.autoUpdate = false;
+
         clock = new THREE.Clock();
 
         this.initCamera();
@@ -390,7 +387,7 @@ class ThreeManager {
     }
 
     initCamera() {
-        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) * 1.5, 50, 90),
+        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) * 1.5, 60, 90),
             width / height, 0.1, 1000);
         camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         cameraControls = new CameraControls(camera, renderer.domElement);
@@ -429,11 +426,11 @@ class ThreeManager {
 
         this.lyrics.outlineOffsetX = "8%";
         this.lyrics.outlineOffsetY = "6%";
-        this.lyrics.outlineColor = colorPicker.value;
+        this.lyrics.outlineColor = (0, 0, 0);
 
         this.lyrics.sdfGlyphSize = 128;
 
-        this.lyrics.position.set(3.0118091583251953, 1.15475435256958, -0.049741268157958984);
+        this.lyrics.position.set(2.7118091583251953, 1.10475435256958, -0.049741268157958984);
         this.lyrics.lookAt(camera.position);
     }
 
@@ -447,6 +444,11 @@ class ThreeManager {
             let mirrorBase;
 
             object.traverse((item) => {
+                if (item.isMesh) {
+                    item.castShadow = true;
+                    item.receiveShadow = true;
+                }
+
                 if (item instanceof THREE.Light) {
                     item.intensity = 0;
                     console.log(item.position)
@@ -454,7 +456,7 @@ class ThreeManager {
 
                 if (item.material) {
                     if (item.material.name === "mirror") {
-                        const mirrorGeometry = new THREE.PlaneGeometry(0.95, 1.9, 1, 1);
+                        const mirrorGeometry = new THREE.PlaneGeometry(0.8, 1.6, 1, 1);
                         const mirror = new Reflector(mirrorGeometry, {
                             clipBias: 0.003,
                             textureWidth: window.innerWidth * window.devicePixelRatio,
@@ -475,11 +477,13 @@ class ThreeManager {
             scene.add(object);
         })
 
-        const light1 = new THREE.PointLight(0xffffff, 1, 30);
+        const light1 = new THREE.PointLight(0xffffff, 3, 0, 1);
         light1.position.set(1.3041769266128, 2.0788733959198, -0.049741268157958984);
+        light1.castShadow = true;
 
-        const light2 = new THREE.PointLight(0xffffff, 1, 30);
+        const light2 = new THREE.PointLight(0xffffff, 3, 0, 1);
         light2.position.set(5.1620965003967, 2.0788733959198, -0.049741268157958984);
+        light2.castShadow = true;
 
         this.moodLight = new THREE.RectAreaLight(0xffffff, 1, 5, 3);
         this.moodLight.position.set(3.2118091583251953, 2.6788733959198, -0.049741268157958984);
@@ -489,7 +493,7 @@ class ThreeManager {
         scene.add(light2);
         scene.add(this.moodLight);
 
-        let ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        let ambientLight = new THREE.AmbientLight(0x77eeff, 0.1);
         scene.add(ambientLight);
     }
 
@@ -512,7 +516,7 @@ class ThreeManager {
 
         this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
         scene.background = moodColor;
-
+        this.lyrics.outlineColor = moodColor;
 
         // set camera movement multiplier
         let multiplierX = 100 / camera.fov;
@@ -559,7 +563,7 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
-        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect * 1.5, 50, 90);
+        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect * 1.5, 60, 90);
 
         console.log(camera.fov)
 
