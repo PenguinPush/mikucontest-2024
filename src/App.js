@@ -390,7 +390,7 @@ class ThreeManager {
     }
 
     initCamera() {
-        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) / 2, 50, 90),
+        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) * 1.5, 50, 90),
             width / height, 0.1, 1000);
         camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         cameraControls = new CameraControls(camera, renderer.domElement);
@@ -559,7 +559,9 @@ class ThreeManager {
         renderer.setPixelRatio(window.devicePixelRatio)
 
         camera.aspect = width / height;
-        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect / 2, 50, 90);
+        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect * 1.5, 50, 90);
+
+        console.log(camera.fov)
 
         camera.updateProjectionMatrix();
         this.update()
