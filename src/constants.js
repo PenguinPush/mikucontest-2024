@@ -2,7 +2,9 @@
 export const maxTextScale = 1.1;
 export const minTextScale = 0.9;
 export const baseTextSize = 0.8;
-export const fov = 60;
+export const baseFov = 60;
+export const minFov = 60;
+export const maxFov = 90;
 
 export const songList = [
     ["https://piapro.jp/t/hZ35/20240130103028", 4592293, 2727635, 2824326, 59415, 13962],
@@ -13,3 +15,6 @@ export const songList = [
     ["https://piapro.jp/t/xEA7/20240202002556", 4592300, 2727640, 2824331, 59420, 13967]
 ];
 
+export const cameraPos = [5.68, 1.27, 1.6];
+export const cameraRot = [Math.PI / 3, Math.PI / 2];
+export const textPos = [2.71, 1.3, -0.04]

@@ -1,32 +1,17 @@
 // import necessary modules
 import {Player} from "textalive-app-api";
-
 import * as THREE from "three";
 
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
 import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
-import {maxTextScale, minTextScale, baseTextSize, fov, songList} from "./constants";
 import WebGL from "three/addons/capabilities/WebGL.js";
-import {isValidUrl} from "./utils";
 import CameraControls from 'camera-controls';
-
 CameraControls.install({THREE: THREE});
 
-// initialize variables
-const playBtns = document.querySelectorAll(".play");
-const jumpBtn = document.querySelector("#jump");
-const pauseBtn = document.querySelector("#pause");
-const rewindBtn = document.querySelector("#rewind");
-const volumeSlider = document.querySelector("#volume");
-const progressBar = document.querySelector("#progress");
-const songSelector = document.querySelector("#song");
-const customSong = document.querySelector("#custom-song");
+import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPos, cameraRot, textPos} from "./constants";
 
-const positionDisplay = document.querySelector("#position strong");
-const artistSpan = document.querySelector("#artist-name span");
-const songSpan = document.querySelector("#song-name span");
-
+// lyrics information
 class LyricsData {
     constructor() {
         this.char = "";
@@ -67,20 +52,20 @@ class LyricsData {
 
 // global variables
 let player, threeMng;
-let position = 0;
 let lyricsData = new LyricsData();
 
-let camera, scene, renderer, cameraControls, clock;
-let width = window.innerWidth;
-let height = window.innerHeight;
-
-const cameraPos = [2.233595, 1.1, -0.55954];
-const cameraRot = [Math.PI * 1.2, Math.PI / 2];
-
-// input
-let inputX = 0;
-let inputY = 0;
-let isTouching = false;
+// initialize html elements
+const playBtns = document.querySelectorAll(".play");
+const jumpBtn = document.querySelector("#jump");
+const pauseBtn = document.querySelector("#pause");
+const rewindBtn = document.querySelector("#rewind");
+const volumeSlider = document.querySelector("#volume");
+const progressBar = document.querySelector("#progress");
+const songSelector = document.querySelector("#song");
+const customSong = document.querySelector("#custom-song");
+const positionDisplay = document.querySelector("#position strong");
+const artistSpan = document.querySelector("#artist-name span");
+const songSpan = document.querySelector("#song-name span");
 
 // initialize main function
 function initMain() {
@@ -100,9 +85,7 @@ function initMain() {
 function _initPlayer() {
     player = new Player({
         app: {
-            appAuthor: "Andrew Dai",
-            appName: "miku miku",
-            token: "voiEWpeaIFwNII7p",
+            appAuthor: "Andrew Dai", appName: "miku miku", token: "voiEWpeaIFwNII7p",
         },
         mediaElement: document.querySelector("#media"),
         mediaBannerPosition: "top right",
@@ -111,13 +94,7 @@ function _initPlayer() {
     });
 
     player.addListener({
-        onAppReady,
-        onVideoReady,
-        onTimerReady,
-        onTimeUpdate,
-        onPlay,
-        onPause,
-        onStop,
+        onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onPlay, onPause, onStop,
     });
 }
 
@@ -127,57 +104,33 @@ function onAppReady(app) {
         document.querySelector("#control").style.display = "block";
 
         // set up controls
-        playBtns.forEach((playBtn) =>
-            playBtn.addEventListener("click", () => {
-                player.video && player.requestPlay();
-            })
-        );
+        playBtns.forEach((playBtn) => playBtn.addEventListener("click", () => {
+            player.video && player.requestPlay();
+        }));
 
-        jumpBtn.addEventListener(
-            "click",
-            () =>
-                player.video &&
-                player.requestMediaSeek(player.video.firstChar.startTime)
-        );
+        jumpBtn.addEventListener("click", () => player.video && player.requestMediaSeek(player.video.firstChar.startTime));
 
-        pauseBtn.addEventListener(
-            "click",
-            () => player.video && player.requestPause()
-        );
+        pauseBtn.addEventListener("click", () => player.video && player.requestPause());
 
-        rewindBtn.addEventListener(
-            "click",
-            () => player.video && player.requestMediaSeek(0)
-        );
+        rewindBtn.addEventListener("click", () => player.video && player.requestMediaSeek(0));
 
-        volumeSlider.addEventListener(
-            "input",
-            () => player.volume = volumeSlider.value
-        );
+        volumeSlider.addEventListener("input", () => player.volume = volumeSlider.value);
 
-        progressBar.addEventListener(
-            "input",
-            () => player.requestMediaSeek(progressBar.value * player.video.duration)
-        );
+        progressBar.addEventListener("input", () => player.requestMediaSeek(progressBar.value * player.video.duration));
 
-        songSelector.addEventListener(
-            "change",
-            () => {
-                if (songSelector.value >= 0) { // non-custom song
-                    customSong.style.display = "none";
-                    loadSong(songSelector.value, false);
-                } else { // custom song
-                    customSong.style.display = "inline";
-                    loadSong(customSong.value, true);
-                }
-            });
-
-        customSong.addEventListener(
-            "change",
-            () => {
+        songSelector.addEventListener("change", () => {
+            if (songSelector.value >= 0) { // non-custom song
+                customSong.style.display = "none";
+                loadSong(songSelector.value, false);
+            } else { // custom song
+                customSong.style.display = "inline";
                 loadSong(customSong.value, true);
             }
-        );
+        });
+
+        customSong.addEventListener("change", () => {
+            loadSong(customSong.value, true);
+        });
     }
 
     if (!app.songUrl) {
@@ -212,8 +165,6 @@ function onVideoReady(v) {
         p.animate = animatePhrase.bind(this);
         p = p.next;
     }
-
-    position = 0;
 }
 
 function onTimerReady(t) {
@@ -229,8 +180,6 @@ function onTimerReady(t) {
 function onTimeUpdate(pos) {
     positionDisplay.textContent = String(Math.floor(pos));
     progressBar.value = pos / player.video.duration;
-
-    position = pos;
 }
 
 function onPlay() {
@@ -244,7 +193,7 @@ function onPause() {
 }
 
 function onStop() {
-    lyrics.text = "-";
+    lyricsData.text = "-";
 
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
     pauseBtn.style.display = "none" // toggle button to play
@@ -281,7 +230,7 @@ function loadSong(value, isCustom) {
             lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
         });
     } else { // fetch from songle
-        if (isValidUrl(value)) {
+        if (checkUrl(value)) {
             player.createFromSongUrl(value).then(() => {
                 lyricsData.text = "-";
                 lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
@@ -318,144 +267,65 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    // rerender the scene
-    threeMng.update(position);
+    threeMng.update();
     window.requestAnimationFrame(() => update());
+}
+
+function checkUrl(urlString) {
+    try {
+        return Boolean(new URL(urlString));
+    } catch (e) {
+        return false;
+    }
 }
 
 // everything 3d
 class ThreeManager {
     constructor() {
-        // set up renderer
-        renderer = new THREE.WebGLRenderer({antialias: true});
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(window.devicePixelRatio)
-        document.getElementById("view").appendChild(renderer.domElement);
+        this.renderer = new THREE.WebGLRenderer({antialias: true});
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio)
+        document.getElementById("view").appendChild(this.renderer.domElement);
 
-        renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.enabled = true;
         // renderer.shadowMap.autoUpdate = false;
 
-        clock = new THREE.Clock();
-
+        this.initScene();
         this.initCamera();
         this.initControls();
-
-        // set up scene
-        scene = new THREE.Scene();
-        this._loadScene();
-        this.loadLyrics();
+        this.initLyrics();
     }
 
-    initControls() {
-        // track the cursor/finger position
-        document.addEventListener("mousemove", (event) => {
-            this.normalizeInput(event.clientX, event.clientY);
-            isTouching = true;
-        })
-
-        document.addEventListener("touchstart", (event) => {
-            if (event.touches.length === 1) {
-                this.normalizeInput(event.touches[0].clientX, event.touches[0].clientY);
-                isTouching = true;
-            }
-        })
-
-        document.addEventListener("touchmove", (event) => {
-            if (event.touches.length === 1) {
-                this.normalizeInput(event.touches[0].clientX, event.touches[0].clientY);
-                isTouching = true;
-            }
-        })
-
-        document.addEventListener("touchend", (event) => {
-            setTimeout(() => {
-                isTouching = false;
-            }, 30);
-        })
-
-        document.addEventListener("touchcancel", (event) => {
-            setTimeout(() => {
-                isTouching = false;
-            }, 30);
-        })
-
-        document.addEventListener("mouseleave", (event) => {
-            setTimeout(() => {
-                isTouching = false;
-            }, 30);
-        })
-    }
-
-    initCamera() {
-        camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(fov / (width / height) * 1.5, 60, 90),
-            width / height, 0.1, 1000);
-        camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
-        cameraControls = new CameraControls(camera, renderer.domElement);
-        cameraControls.minDistance = cameraControls.maxDistance = 0;
-
-        this.movementStrength = 1 / 10;
-        this.rotateStrength = 1 / 12;
-        cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
-        cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
-
-        cameraControls.touches.one = CameraControls.ACTION.NONE;
-        cameraControls.touches.two = CameraControls.ACTION.NONE;
-        cameraControls.touches.three = CameraControls.ACTION.NONE;
-
-        cameraControls.moveTo(cameraPos[0], cameraPos[1], cameraPos[2], false);
-        cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
-
-        cameraControls.saveState();
-
-        cameraControls.update(clock.getDelta())
-    }
-
-    loadLyrics() {
-        this.lyrics = new Text();
-        scene.add(this.lyrics);
-
-        // set properties for the text
-        this.lyrics.fontSize = baseTextSize;
-        this.lyrics.font = "src/assets/NotoSansJP-Bold.ttf"
-
-        this.lyrics.textAlign = "center"
-        this.lyrics.anchorX = "50%";
-        this.lyrics.anchorY = "50%";
-
-        this.lyrics.outlineOffsetX = "8%";
-        this.lyrics.outlineOffsetY = "6%";
-        this.lyrics.outlineColor = (0, 0, 0);
-
-        this.lyrics.sdfGlyphSize = 128;
-
-        this.lyrics.position.set(2.7118091583251953, 1.10475435256958, -0.049741268157958984);
-        this.lyrics.lookAt(camera.position);
-    }
-
-    _loadScene() {
-        scene.background = new THREE.Color(0x22eeff);
-        // load the environment
+    initScene() {
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x22eeff);
         const loader = new GLTFLoader();
 
         loader.load("src/assets/bedroom_base.glb", function (gltf) {
-            let object = gltf.scene;
+            let room = gltf.scene;
             let mirrorBase;
 
-            object.traverse((item) => {
+            // edit the bedroom
+            room.traverse((item) => {
                 if (item.isMesh) {
+                    // enable shadows
                     item.castShadow = true;
                     item.receiveShadow = true;
                 }
 
                 if (item instanceof THREE.Light) {
+                    // disable blender lights, they don't translate well
                     item.intensity = 0;
-                    console.log(item.position)
+                }
+
+                if (item instanceof THREE.PerspectiveCamera) {
+                    // log cameras
+                    console.log(item.position, item.rotation)
                 }
 
                 if (item.material) {
                     if (item.material.name === "mirror") {
+                        // swap out the mirror with a reflector object
                         const mirrorGeometry = new THREE.PlaneGeometry(0.8, 1.6, 1, 1);
                         const mirror = new Reflector(mirrorGeometry, {
                             clipBias: 0.003,
@@ -468,36 +338,123 @@ class ThreeManager {
                         mirror.rotation.set(0, -Math.PI / 2, 0)
 
                         mirrorBase = item;
-                        scene.add(mirror);
                     }
                 }
             })
 
             mirrorBase.parent.remove(mirrorBase);
-            scene.add(object);
+            threeMng.scene.add(room);
         })
 
-        const light1 = new THREE.PointLight(0xffffff, 3, 0, 1);
-        light1.position.set(1.3041769266128, 2.0788733959198, -0.049741268157958984);
-        light1.castShadow = true;
+        const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
+        light.position.set(3.3041769266128, 2.0788733959198, -0.049741268157958984);
+        light.castShadow = true;
 
-        const light2 = new THREE.PointLight(0xffffff, 3, 0, 1);
-        light2.position.set(5.1620965003967, 2.0788733959198, -0.049741268157958984);
-        light2.castShadow = true;
-
-        this.moodLight = new THREE.RectAreaLight(0xffffff, 1, 5, 3);
-        this.moodLight.position.set(3.2118091583251953, 2.6788733959198, -0.049741268157958984);
+        this.moodLight = new THREE.RectAreaLight(0xffffff, 0.5, 5, 3);
+        this.moodLight.position.set(3.3041769266128, 2.6788733959198, -0.049741268157958984);
         this.moodLight.lookAt(this.moodLight.position.x, -10, this.moodLight.position.z);
 
-        scene.add(light1);
-        scene.add(light2);
-        scene.add(this.moodLight);
+        const ambientLight = new THREE.AmbientLight(0xd4f8ff, 0.2);
 
-        let ambientLight = new THREE.AmbientLight(0x77eeff, 0.1);
-        scene.add(ambientLight);
+        this.scene.add(light);
+        this.scene.add(this.moodLight);
+        this.scene.add(ambientLight);
     }
 
-    update(t) {
+    initCamera() {
+        this.camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(baseFov / (window.innerWidth / window.innerHeight) * 1.5, minFov, maxFov),
+            window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
+        this.clock = new THREE.Clock();
+
+        this.camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
+        this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
+        this.cameraControls.distance = this.cameraControls.minDistance = this.cameraControls.maxDistance = 0.1;
+
+        this.movementStrength = 1 / 10;
+        this.rotateStrength = 1 / 12;
+
+        this.cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
+        this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
+        this.cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
+        this.cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
+        this.cameraControls.touches.one = CameraControls.ACTION.NONE;
+        this.cameraControls.touches.two = CameraControls.ACTION.NONE;
+        this.cameraControls.touches.three = CameraControls.ACTION.NONE;
+
+        this.cameraControls.saveState();
+        this.cameraControls.update(this.clock.getDelta())
+    }
+
+    initControls() {
+        this.inputX = 0;
+        this.inputY = 0;
+        this.isTouching = false;
+
+        // track the cursor/finger position
+        document.addEventListener("mousemove", (event) => {
+            this.inputX = (event.clientX / window.innerWidth) * 2 - 1;
+            this.inputY = -(event.clientY / window.innerHeight) * 2 + 1;
+            this.isTouching = true;
+        })
+
+        document.addEventListener("touchstart", (event) => {
+            if (event.touches.length === 1) {
+                this.inputX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                this.inputY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+                this.isTouching = true;
+
+            }
+        })
+
+        document.addEventListener("touchmove", (event) => {
+            if (event.touches.length === 1) {
+                this.inputX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+                this.inputY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
+                this.isTouching = true;
+            }
+        })
+
+        document.addEventListener("touchend", (event) => {
+            setTimeout(() => {
+                this.isTouching = false;
+            }, 30); // delay to fix bug where it gets stuck
+        })
+
+        document.addEventListener("touchcancel", (event) => {
+            setTimeout(() => {
+                this.isTouching = false;
+            }, 30);
+        })
+
+        document.addEventListener("mouseleave", (event) => {
+            setTimeout(() => {
+                this.isTouching = false;
+            }, 30);
+        })
+    }
+
+    initLyrics() {
+        this.lyrics = new Text();
+        this.scene.add(this.lyrics);
+
+        // set properties for the text
+        this.lyrics.fontSize = baseTextSize;
+        this.lyrics.font = "src/assets/NotoSansJP-Bold.ttf"
+
+        this.lyrics.textAlign = "center"
+        this.lyrics.anchorX = "50%";
+        this.lyrics.anchorY = "50%";
+        this.lyrics.outlineOffsetX = "8%";
+        this.lyrics.outlineOffsetY = "6%";
+        this.lyrics.outlineColor = (0, 0, 0);
+        this.lyrics.sdfGlyphSize = 128;
+
+        this.lyrics.position.set(...textPos);
+        this.lyrics.lookAt(...cameraPos);
+    }
+
+    update() {
         // update lyrics
         this.lyrics.text = lyricsData.word;
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
@@ -511,69 +468,47 @@ class ThreeManager {
         const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2)
 
         const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
-            THREE.MathUtils.clamp(g, 0, 1),
-            THREE.MathUtils.clamp(b, 0, 1))
-
+            THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1))
         this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
-        scene.background = moodColor;
         this.lyrics.outlineColor = moodColor;
+        this.scene.background = moodColor;
 
-        // set camera movement multiplier
-        let multiplierX = 100 / camera.fov;
-        let multiplierY = 100 / camera.fov;
+        // set camera movement modifier
+        let movementDampener = 100 / this.camera.fov;
+        if (this.inputX ** 2 + this.inputY ** 2 > 1) {
+            movementDampener = 100 / (this.inputX ** 2 + this.inputY ** 2) ** 0.5 / this.camera.fov;
+        } // if the cursor exits the radius, scale the strength of the movement down in tandem with how far the cursor goes
 
-        // scale down the tracking if it exits the radius
-        if (inputX ** 2 + inputY ** 2 > 1) {
-            multiplierX = 100 / (inputX ** 2 + inputY ** 2) ** 0.5 / camera.fov;
-            multiplierY = 100 / (inputX ** 2 + inputY ** 2) ** 0.5 / camera.fov;
-        }
-
-        // rotate and move the camera a little
-        if (isTouching) {
+        if (this.isTouching) {
             // complicated math to make the camera translate along its local z plane instead of the global one
-            let forward = camera.getWorldDirection(new THREE.Vector3()).negate();
-            let up = camera.up.clone();
+            let forward = this.camera.getWorldDirection(new THREE.Vector3()).negate();
+            let up = this.camera.up.clone();
             let right = new THREE.Vector3().crossVectors(forward, up);
-
-            let movementX = right.multiplyScalar(-inputX * this.movementStrength * multiplierX);
-            let movementY = up.multiplyScalar(inputY * this.movementStrength * multiplierY);
-
+            let movementX = right.multiplyScalar(-this.inputX * this.movementStrength * movementDampener);
+            let movementY = up.multiplyScalar(this.inputY * this.movementStrength * movementDampener);
             let targetPosition = new THREE.Vector3(...cameraPos).add(movementX).add(movementY);
 
-            cameraControls.moveTo(targetPosition.x, targetPosition.y, targetPosition.z, true);
-
-            // just rotating it LOL, nowhere near as hard math
-            cameraControls.rotateTo(cameraRot[0] - inputX * this.rotateStrength, cameraRot[1] + inputY * this.rotateStrength, true)
+            this.cameraControls.moveTo(targetPosition.x, targetPosition.y, targetPosition.z, true);
+            this.cameraControls.rotateTo(cameraRot[0] - this.inputX * this.rotateStrength, cameraRot[1] + this.inputY * this.rotateStrength, true)
         } else {
             // set to default positions
-            cameraControls.moveTo(cameraPos[0],
-                cameraPos[1], cameraPos[2], true)
-            cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
+            this.cameraControls.moveTo(cameraPos[0], cameraPos[1], cameraPos[2], true)
+            this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
         }
 
-        cameraControls.update(clock.getDelta())
-        renderer.render(scene, camera);
+        this.cameraControls.update(this.clock.getDelta())
+        this.renderer.render(this.scene, this.camera);
     }
 
     resize() {
-        width = window.innerWidth;
-        height = window.innerHeight;
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio)
 
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(window.devicePixelRatio)
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.fov = THREE.MathUtils.clamp(baseFov / this.camera.aspect * 1.5, minFov, maxFov);
 
-        camera.aspect = width / height;
-        camera.fov = THREE.MathUtils.clamp(fov / camera.aspect * 1.5, 60, 90);
-
-        console.log(camera.fov)
-
-        camera.updateProjectionMatrix();
+        this.camera.updateProjectionMatrix();
         this.update()
-    }
-
-    normalizeInput(clientX, clientY, windowWidth, windowHeight) {
-        inputX = (clientX / window.innerWidth) * 2 - 1;
-        inputY = -(clientY / window.innerHeight) * 2 + 1;
     }
 }
 
