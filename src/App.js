@@ -340,7 +340,13 @@ class ThreeManager {
     initScene() {
         this.scene = new THREE.Scene();
         const loader = new GLTFLoader();
-        
+        const bgLoader = new RGBELoader();
+
+        bgLoader.load("src/assets/sky.hdr", function (texture){
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            this.scene.background = texture;
+        }.bind(this));
+
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             let room = gltf.scene;
             let mirrorBase;
@@ -519,7 +525,6 @@ class ThreeManager {
 
         this.moodLight.color = this.moodColor.offsetHSL(0, 1, 0);
         this.lyrics.outlineColor = this.moodColor;
-        this.scene.background = this.moodColor;
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
