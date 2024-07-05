@@ -7,6 +7,7 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 CameraControls.install({THREE: THREE});
 import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPositions} from "./constants";
@@ -329,8 +330,17 @@ class ThreeManager {
 
     initScene() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x22eeff);
         const loader = new GLTFLoader();
+        const bgLoader = new RGBELoader();
+
+        bgLoader.load("src/assets/sky.hdr", function(texture){
+            console.log("TEXTURE:")
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            console.log(texture)
+
+            this.scene.background = texture;
+        }.bind(this))
+
 
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             let room = gltf.scene;
@@ -505,7 +515,6 @@ class ThreeManager {
         const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1))
         this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
         this.lyrics.outlineColor = moodColor;
-        this.scene.background = moodColor;
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
