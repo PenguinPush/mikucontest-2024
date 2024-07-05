@@ -7,7 +7,6 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 CameraControls.install({THREE: THREE});
 import {
@@ -55,8 +54,8 @@ class LyricsData {
         this.textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(this.ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
 
         // determine squash & stretch from how the scale change
-        this.stretch += (this.textScale - this.textScaleDelta) * 5;
-        this.stretch *= 0.9999; // decay squash & stretch
+        this.stretch += (this.textScale - this.textScaleDelta) * 10;
+        this.stretch *= 0.9998; // decay squash & stretch
         this.stretch = THREE.MathUtils.clamp(this.stretch, -0.7, 0.7); // clamp squash & stretch
     }
 
@@ -68,6 +67,7 @@ class LyricsData {
 // global variables
 let player, threeMng;
 let lyricsData = new LyricsData();
+let position = 0;
 
 // initialize html elements
 const playBtns = document.querySelectorAll(".play");
@@ -109,6 +109,7 @@ function _initPlayer() {
     player.addListener({
         onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onPlay, onPause, onStop,
     });
+    player.fps = 60;
 }
 
 // player event handlers
@@ -185,8 +186,14 @@ function onVideoReady(v) {
         p.animate = animatePhrase.bind(this);
         p = p.next;
     }
+}
 
-    console.log(player.getChoruses())
+function onTimerReady(t) {
+    if (!player.app.managed) {
+        document
+            .querySelectorAll("#control *")
+            .forEach((item) => (item.disabled = false));
+    }
 
     // generate progress bar with css gradients
     const choruses = player.getChoruses();
@@ -222,16 +229,9 @@ function onVideoReady(v) {
     progressBar.style.background = progressGradient;
 }
 
-function onTimerReady(t) {
-    if (!player.app.managed) {
-        document
-            .querySelectorAll("#control *")
-            .forEach((item) => (item.disabled = false));
-    }
-}
-
 function onTimeUpdate(pos) {
     progressBar.value = pos / player.video.duration;
+    position = pos;
 }
 
 function onPlay() {
@@ -326,7 +326,7 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    threeMng.update();
+    threeMng.update(position);
     window.requestAnimationFrame(() => update());
 }
 
@@ -344,6 +344,10 @@ class ThreeManager {
         this.cameraPosIndex = 0;
         this.movementStrength = 1 / 10;
         this.rotateStrength = 1 / 12;
+
+        this.innerSky = null;
+        this.coloredSky = null;
+        this.outerSky = null;
 
         leftArrow.addEventListener("click", () => {
             this.goLeft();
@@ -379,15 +383,9 @@ class ThreeManager {
     initScene() {
         this.scene = new THREE.Scene();
         const loader = new GLTFLoader();
-        const bgLoader = new RGBELoader();
-
-        bgLoader.load("src/assets/sky.hdr", function (texture){
-            texture.mapping = THREE.EquirectangularReflectionMapping;
-            this.scene.background = texture;
-        }.bind(this));
 
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
-            let room = gltf.scene;
+            const room = gltf.scene;
             let mirrorBase;
 
             // edit the bedroom
@@ -401,11 +399,6 @@ class ThreeManager {
                 if (item instanceof THREE.Light) {
                     // disable blender lights, they don't translate well
                     item.intensity = 0;
-                }
-
-                if (item instanceof THREE.PerspectiveCamera) {
-                    // log cameras
-                    console.log(item.position, item.rotation)
                 }
 
                 if (item.material) {
@@ -424,6 +417,34 @@ class ThreeManager {
 
                         mirrorBase = item;
                     }
+                }
+
+                if (item.name === "inner_sky") {
+                    item.material.color = new THREE.Color(1, 1, 1);
+                    item.material.blending = THREE.AdditiveBlending;
+                    item.material.opacity = 0.2;
+
+                    item.castShadow = false;
+                    item.receiveShadow = false;
+
+                    threeMng.innerSky = item;
+                }
+
+                if (item.name === "colored_sky") {
+                    item.material.color = new THREE.Color(0, 0, 0);
+                    item.material.opacity = 0.8;
+
+                    item.castShadow = false;
+                    item.receiveShadow = false;
+
+                    threeMng.coloredSky = item;
+                }
+
+                if (item.name === "outer_sky") {
+                    item.castShadow = false;
+                    item.receiveShadow = false;
+
+                    threeMng.outerSky = item;
                 }
             })
 
@@ -500,19 +521,19 @@ class ThreeManager {
         document.addEventListener("touchend", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30); // delay to fix bug where it gets stuck
+            }, 1000/30); // delay to fix bug where it gets stuck
         })
 
         document.addEventListener("touchcancel", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30);
+            }, 1000/30);
         })
 
         document.addEventListener("mouseleave", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30);
+            }, 1000/30);
         })
     }
 
@@ -576,7 +597,7 @@ class ThreeManager {
         }
     }
 
-    update() {
+    update(pos) {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
@@ -599,13 +620,29 @@ class ThreeManager {
             const b = (0.85 - lyricsData.arousal) * 2;
             const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
 
-            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1));
+            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
+                THREE.MathUtils.clamp(g, 0, 1),
+                THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
         } else {
             this.moodColor = new THREE.Color(1, 1, 1);
         }
 
-        this.moodLight.color = this.moodColor.offsetHSL(0, 1, 0);
+        this.moodLight.color = this.moodColor;
         this.lyrics.outlineColor = this.moodColor;
+
+        if (this.innerSky) {
+            this.innerSky.rotation.y = -1 / 6000 * pos;
+        }
+
+        if (this.coloredSky) {
+            this.coloredSky.material.color = new THREE.Color().addColors(this.moodColor, new THREE.Color(0.2, 0.2, 0.2));
+            this.coloredSky.rotation.y = 1 / 6000 * pos;
+        }
+
+        if (this.outerSky) {
+            this.outerSky.rotation.y = -1 / 8000 * pos;
+        }
+
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
