@@ -37,7 +37,7 @@ export const cameraPositions = [
     },
 
     { // Notebook
-        pos: [4, 1.8, -0.7],
+        pos: [5, 1.4, -1.1],
         rot: [0, Math.PI/6],
         text: [2.71, 1.3, -0.04]
     },
