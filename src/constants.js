@@ -15,10 +15,6 @@ export const songList = [
     ["https://piapro.jp/t/xEA7/20240202002556", 4592300, 2727640, 2824331, 59420, 13967]
 ];
 
-// export const cameraPos = [5.68, 1.27, 1.6];
-// export const cameraRot = [Math.PI / 3, Math.PI / 2];
-// export const textPos = [2.71, 1.3, -0.04]
-
 export const cameraPositions = [
     { // Bed
         pos: [5.68, 1.27, 1.6],

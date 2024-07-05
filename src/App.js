@@ -9,7 +9,7 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
-import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, cameraPos, cameraRot, textPos, songList, cameraPositions} from "./constants";
+import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPositions} from "./constants";
 
 // lyrics information
 class LyricsData {
