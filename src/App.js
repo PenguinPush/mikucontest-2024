@@ -30,8 +30,7 @@ class LyricsData {
         this.text = "";
 
         this.floatingChars = [];
-
-        this.previousUnit = {};
+        this.previousUnits = new Set();
 
         this.textOverride = false; // when true, display this.text instead of the desired character/word/phrase
         this.textScale = 1;
@@ -299,18 +298,19 @@ function loadSong(value, isCustom) {
     }
 }
 
+
 function animateChar(pos, unit) {
-    if (unit.contains(pos) && unit != lyricsData.previousUnit) {
+    if (!lyricsData.previousUnits.has(unit)) {
         lyricsData.floatingChars.push({
             text: unit.text,
             object: null,
             startPosition: [2.8, 0.8 + Math.random(), 2.5],
-            creationTime: 0,
+            creationTime: unit._data.startTime,
             movementVector: [-1, 0, 0],
             currentPosition: [0, 0, 0],
         });
         lyricsData.char = unit.text;
-        lyricsData.previousUnit = unit;
+        lyricsData.previousUnits.add(unit);
     }
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
@@ -585,7 +585,6 @@ class ThreeManager {
                 charObject.position.set(...currChar.currentPosition);
 
                 currChar.object = charObject;
-                currChar.creationTime = player.videoPosition;
             }
             currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0]*(player.videoPosition - currChar.creationTime)*0.001;
             currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1]*(player.videoPosition - currChar.creationTime)*0.001;
