@@ -58,6 +58,7 @@ body {
     gap: 8px;
     background: rgba(255, 255, 255, 0.2);
     padding: 8px;
+    width: 150%;
 }
 
 #main-controls {
@@ -99,11 +100,11 @@ body {
 
 #progress {
     -webkit-appearance: none;
+    -moz-appearance: none;
     appearance: none;
     height: 16px;
     background: #d3d3d3;
     outline: 4px solid rgba(255, 255, 255, 0.2);
-    width: 700px;
     border-radius: 12px;
     position: relative;
 }
@@ -132,7 +133,7 @@ body {
 #progress::-moz-range-thumb {
     width: 10px;
     height: 30px;
-    background: #4CAF50;
+    background: #ffffff;
     cursor: pointer;
     border-radius: 20px;
 
@@ -154,9 +155,23 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 5px;
+    gap: 4px;
     background: rgba(255, 255, 255, 0.2);
-    padding: 5px;
+    padding: 4px;
+}
+
+#song {
+    background-color: #ffffff;
+    background-image: url("assets/buttons/button_song.png");
+    background-repeat: no-repeat;
+    background-position: 4px;
+    background-size: 36px 36px;
+    border: none;
+    padding: 10px 20px 10px 40px;
+    height: 36px;
+    border-radius: 20px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
 
 #meta {
@@ -197,7 +212,7 @@ body {
     top: 0;
     left: 0;
     height: 100%;
-    width: 51%;
+    width: 50%;
     background: whitesmoke;
     transform: skew(0deg, 20deg);
 }

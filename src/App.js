@@ -9,6 +9,12 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
+
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {HalftonePass} from 'three/addons/postprocessing/HalftonePass.js';
+import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
+
 import {
     maxTextScale,
     minTextScale,
@@ -312,7 +318,10 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    threeMng.update(position);
+    if (threeMng.composer && threeMng.innerSky && threeMng.coloredSky && threeMng.outerSky) {
+        // only update once everything is done loading
+        threeMng.update(position);
+    }
     window.requestAnimationFrame(() => update());
 }
 
@@ -327,6 +336,11 @@ function checkUrl(urlString) {
 // everything 3d
 class ThreeManager {
     constructor() {
+        this.renderer = new THREE.WebGLRenderer({antialias: true});
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio)
+        document.getElementById("view").appendChild(this.renderer.domElement);
+
         this.cameraPosIndex = 0;
         this.movementStrength = 1 / 10;
         this.rotateStrength = 1 / 12;
@@ -342,18 +356,15 @@ class ThreeManager {
             this.goRight();
         });
 
-        this.renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.setPixelRatio(window.devicePixelRatio)
-        document.getElementById("view").appendChild(this.renderer.domElement);
-
         this.renderer.shadowMap.enabled = true;
+        this.renderer.autoClear = false;
         // renderer.shadowMap.autoUpdate = false;
 
         this.initScene();
         this.initCamera();
         this.initControls();
         this.initLyrics();
+        this.initPostProcessing();
     }
 
     goLeft() {
@@ -507,19 +518,19 @@ class ThreeManager {
         document.addEventListener("touchend", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 1000/30); // delay to fix bug where it gets stuck
+            }, 1000 / 30); // delay to fix bug where it gets stuck
         })
 
         document.addEventListener("touchcancel", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 1000/30);
+            }, 1000 / 30);
         })
 
         document.addEventListener("mouseleave", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 1000/30);
+            }, 1000 / 30);
         })
     }
 
@@ -541,6 +552,31 @@ class ThreeManager {
 
         this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
         this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+    }
+
+    initPostProcessing() {
+        this.composer = new EffectComposer(this.renderer);
+
+        const renderPass = new RenderPass(this.scene, this.camera);
+        this.composer.addPass(renderPass);
+
+        const params = {
+            shape: 4,
+            radius: 4,
+            rotateR: 0,
+            rotateB: 0,
+            rotateG: 0,
+            scatter: 0,
+            blending: 0.5,
+            blendingMode: 0,
+            greyscale: false,
+            disable: false
+        };
+        const halftonePass = new HalftonePass(window.innerWidth, window.innerHeight, params);
+        // this.composer.addPass(halftonePass);
+
+        const outputPass = new OutputPass();
+        this.composer.addPass(outputPass);
     }
 
     update(pos) {
@@ -570,19 +606,12 @@ class ThreeManager {
         this.moodLight.color = this.moodColor;
         this.lyrics.outlineColor = this.moodColor;
 
-        if (this.innerSky) {
-            this.innerSky.rotation.y = -1 / 6000 * pos;
-        }
+        this.innerSky.rotation.y = -1 / 6000 * pos;
 
-        if (this.coloredSky) {
-            this.coloredSky.material.color = new THREE.Color().addColors(this.moodColor, new THREE.Color(0.2, 0.2, 0.2));
-            this.coloredSky.rotation.y = 1 / 6000 * pos;
-        }
+        this.coloredSky.material.color = new THREE.Color().addColors(this.moodColor, new THREE.Color(0.2, 0.2, 0.2));
+        this.coloredSky.rotation.y = 1 / 6000 * pos;
 
-        if (this.outerSky) {
-            this.outerSky.rotation.y = -1 / 8000 * pos;
-        }
-
+        this.outerSky.rotation.y = -1 / 8000 * pos;
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
@@ -608,11 +637,12 @@ class ThreeManager {
         }
 
         this.cameraControls.update(this.clock.getDelta())
-        this.renderer.render(this.scene, this.camera);
+        this.composer.render(this.scene, this.camera);
     }
 
     resize() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.composer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio)
 
         this.camera.aspect = window.innerWidth / window.innerHeight;
