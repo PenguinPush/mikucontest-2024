@@ -18,7 +18,8 @@ import {
     minFov,
     maxFov,
     songList,
-    cameraPositions
+    cameraPositions,
+    BEDROOM,
 } from "./constants";
 
 // lyrics information
@@ -28,6 +29,10 @@ class LyricsData {
         this.word = "";
         this.phrase = "";
         this.text = "";
+
+        this.floatingChars = [];
+
+        this.previousUnit = {};
 
         this.textOverride = false; // when true, display this.text instead of the desired character/word/phrase
         this.textScale = 1;
@@ -291,8 +296,17 @@ function loadSong(value, isCustom) {
 }
 
 function animateChar(pos, unit) {
-    if (unit.contains(pos)) {
+    if (unit.contains(pos) && unit != lyricsData.previousUnit) {
+        lyricsData.floatingChars.push({
+            text: unit.text,
+            object: null,
+            startPosition: [2.8, 0.8 + Math.random(), 2.5],
+            creationTime: 0,
+            movementVector: [-1, 0, 0],
+            currentPosition: [0, 0, 0],
+        });
         lyricsData.char = unit.text;
+        lyricsData.previousUnit = unit;
     }
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
@@ -522,15 +536,61 @@ class ThreeManager {
         this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
+    // Draws all current floating characters
+    updateFloatingChars(){
+        // Find a way to skip all chars that shouldn't be displayed, along with reset the char list whenever the song is changed
+        for (let i=0; i<lyricsData.floatingChars.length; i++){
+            let currChar = lyricsData.floatingChars[i];
+            if (currChar.object == null){
+                let charObject = new Text();
+                this.scene.add(charObject);
+        
+                charObject.fontSize = baseTextSize / 4;
+                charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+        
+                charObject.textAlign = "center"
+                charObject.anchorX = "50%";
+                charObject.anchorY = "50%";
+                charObject.outlineOffsetX = "8%";
+                charObject.outlineOffsetY = "6%";
+                charObject.outlineColor = (0, 0, 0);
+                charObject.sdfGlyphSize = 128;
+                charObject.text = currChar.text;
+
+                // TODO: Make the lyrics face the right direction
+                charObject.position.set(...currChar.currentPosition);
+
+                currChar.object = charObject;
+                currChar.creationTime = player.videoPosition;
+            }
+            currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0]*(player.videoPosition - currChar.creationTime)*0.001;
+            currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1]*(player.videoPosition - currChar.creationTime)*0.001;
+            currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2]*(player.videoPosition - currChar.creationTime)*0.001;
+
+            currChar.object.position.set(...currChar.currentPosition);
+            currChar.object.sync();
+
+            // Increment position of char based on a normalized vector of the end - start position
+            // Render the char
+            // If char has reached the target position, 
+        }
+    }
+
     update() {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
+        this.updateFloatingChars();
+        
         // update lyrics
         this.lyrics.text = lyricsData.word;
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
+        // TODO: Do this in a better way
+        if (this.cameraPosIndex != BEDROOM){
+            this.lyrics.text = "";
+        }
         this.lyrics.sync();
 
         // calculate colors to update lighting based on valence/arousal values

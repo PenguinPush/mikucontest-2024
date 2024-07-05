@@ -38,3 +38,8 @@ export const cameraPositions = [
         text: [2.71, 1.3, -0.04]
     },
 ]
+
+export const BEDROOM = 0;
+export const WINDOW = 1;
+export const TV = 2;
+export const NOTEBOOK = 3;
