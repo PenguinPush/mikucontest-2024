@@ -49,8 +49,8 @@ class LyricsData {
         this.textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(this.ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
 
         // determine squash & stretch from how the scale change
-        this.stretch += (this.textScale - this.textScaleDelta) * 5;
-        this.stretch *= 0.9999; // decay squash & stretch
+        this.stretch += (this.textScale - this.textScaleDelta) * 10;
+        this.stretch *= 0.9998; // decay squash & stretch
         this.stretch = THREE.MathUtils.clamp(this.stretch, -0.7, 0.7); // clamp squash & stretch
     }
 
