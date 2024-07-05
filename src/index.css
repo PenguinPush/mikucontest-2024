@@ -136,6 +136,7 @@ body {
     margin: 10px;
     padding: 5px;
     background: rgba(255, 255, 255, 0.2);
+}
 
 #arrow-container {
     height: 100%;
@@ -168,8 +169,9 @@ body {
     height: 10px;
     width: 20px;
     opacity: 50%;
-  }
-  .chevron:before {
+}
+
+.chevron:before {
     content: '';
     position: absolute;
     top: 0;
@@ -178,8 +180,9 @@ body {
     width: 51%;
     background: whitesmoke;
     transform: skew(0deg, 20deg);
-  }
-  .chevron:after {
+}
+
+.chevron:after {
     content: '';
     position: absolute;
     top: 0;
@@ -188,7 +191,8 @@ body {
     width: 50%;
     background: whitesmoke;
     transform: skew(0deg, -20deg);
-  }
-  .chevron:hover {
+}
+
+.chevron:hover {
     opacity: 80%;
-  }
+}
