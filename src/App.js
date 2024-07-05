@@ -181,6 +181,14 @@ function onVideoReady(v) {
         p.animate = animatePhrase.bind(this);
         p = p.next;
     }
+}
+
+function onTimerReady(t) {
+    if (!player.app.managed) {
+        document
+            .querySelectorAll("#control *")
+            .forEach((item) => (item.disabled = false));
+    }
 
     // generate progress bar with css gradients
     const choruses = player.getChoruses();
@@ -214,14 +222,6 @@ function onVideoReady(v) {
     progressGradient += ')';
 
     progressBar.style.background = progressGradient;
-}
-
-function onTimerReady(t) {
-    if (!player.app.managed) {
-        document
-            .querySelectorAll("#control *")
-            .forEach((item) => (item.disabled = false));
-    }
 }
 
 function onTimeUpdate(pos) {
@@ -332,6 +332,7 @@ class ThreeManager {
         this.rotateStrength = 1 / 12;
 
         this.innerSky = null;
+        this.coloredSky = null;
         this.outerSky = null;
 
         leftArrow.addEventListener("click", () => {
@@ -402,23 +403,34 @@ class ThreeManager {
 
                         mirrorBase = item;
                     }
+                }
 
-                    if (item.material.name === "inner sky") {
-                        item.material.color = new THREE.Color(0, 0, 0);
-                        item.material.opacity = 0.8;
+                if (item.name === "inner_sky") {
+                    item.material.color = new THREE.Color(1, 1, 1);
+                    item.material.blending = THREE.AdditiveBlending;
+                    item.material.opacity = 0.2;
 
-                        item.castShadow = false;
-                        item.receiveShadow = false;
+                    item.castShadow = false;
+                    item.receiveShadow = false;
 
-                        threeMng.innerSky = item;
-                    }
+                    threeMng.innerSky = item;
+                }
 
-                    if (item.material.name === "outer sky") {
-                        item.castShadow = false;
-                        item.receiveShadow = false;
+                if (item.name === "colored_sky") {
+                    item.material.color = new THREE.Color(0, 0, 0);
+                    item.material.opacity = 0.8;
 
-                        threeMng.outerSky = item;
-                    }
+                    item.castShadow = false;
+                    item.receiveShadow = false;
+
+                    threeMng.coloredSky = item;
+                }
+
+                if (item.name === "outer_sky") {
+                    item.castShadow = false;
+                    item.receiveShadow = false;
+
+                    threeMng.outerSky = item;
                 }
             })
 
@@ -548,21 +560,27 @@ class ThreeManager {
             const b = (0.85 - lyricsData.arousal) * 2;
             const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
 
-            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1));
+            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
+                THREE.MathUtils.clamp(g, 0, 1),
+                THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
         } else {
             this.moodColor = new THREE.Color(1, 1, 1);
         }
 
-        this.moodLight.color = this.moodColor.offsetHSL(0, 1, 0);
+        this.moodLight.color = this.moodColor;
         this.lyrics.outlineColor = this.moodColor;
 
         if (this.innerSky) {
-            this.innerSky.material.color = this.moodColor.offsetHSL(0, 1, 0.1);
-            this.innerSky.rotation.y = 1/6000 * pos;
+            this.innerSky.rotation.y = -1 / 6000 * pos;
+        }
+
+        if (this.coloredSky) {
+            this.coloredSky.material.color = new THREE.Color().addColors(this.moodColor, new THREE.Color(0.2, 0.2, 0.2));
+            this.coloredSky.rotation.y = 1 / 6000 * pos;
         }
 
         if (this.outerSky) {
-            this.outerSky.rotation.y = -1/8000 * pos;
+            this.outerSky.rotation.y = -1 / 8000 * pos;
         }
 
 
