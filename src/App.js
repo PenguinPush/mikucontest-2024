@@ -7,9 +7,12 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
+
 CameraControls.install({THREE: THREE});
 
-import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPos, cameraRot, textPos} from "./constants";
+import {
+    maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPos, cameraRot, textPos
+} from "./constants";
 
 // lyrics information
 class LyricsData {
@@ -26,15 +29,15 @@ class LyricsData {
         this.ratio = 1;
         this.stretch = 0;
         this.maxAmplitude = 0;
-        this.valence = 0;
-        this.arousal = 0;
+        this.valence = -1;
+        this.arousal = -1;
     }
 
     // calculate text effects
     update(amplitude, valenceArousal) {
         this.textScaleDelta = this.textScale
         this.ratio = amplitude / this.maxAmplitude;
-        [this.valence, this.arousal] = this.normalizeValenceArousal(valenceArousal);
+        this.normalizeValenceArousal(valenceArousal);
 
         // algorithm that scales the text (but scales less when the scale is already extreme)
         this.textScale = minTextScale + (maxTextScale - minTextScale) * Math.log(this.ratio * maxTextScale + 1) / Math.log(maxTextScale + 1)
@@ -46,7 +49,7 @@ class LyricsData {
     }
 
     normalizeValenceArousal(valenceArousal) {
-        return [(valenceArousal.v + 1) / 2, (valenceArousal.a + 1) / 2];
+        [this.valence, this.arousal] = [(valenceArousal.v + 1) / 2, (valenceArousal.a + 1) / 2];
     }
 }
 
@@ -56,16 +59,11 @@ let lyricsData = new LyricsData();
 
 // initialize html elements
 const playBtns = document.querySelectorAll(".play");
-const jumpBtn = document.querySelector("#jump");
 const pauseBtn = document.querySelector("#pause");
-const rewindBtn = document.querySelector("#rewind");
 const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
 const songSelector = document.querySelector("#song");
 const customSong = document.querySelector("#custom-song");
-const positionDisplay = document.querySelector("#position strong");
-const artistSpan = document.querySelector("#artist-name span");
-const songSpan = document.querySelector("#song-name span");
 
 // initialize main function
 function initMain() {
@@ -108,11 +106,7 @@ function onAppReady(app) {
             player.video && player.requestPlay();
         }));
 
-        jumpBtn.addEventListener("click", () => player.video && player.requestMediaSeek(player.video.firstChar.startTime));
-
         pauseBtn.addEventListener("click", () => player.video && player.requestPause());
-
-        rewindBtn.addEventListener("click", () => player.video && player.requestMediaSeek(0));
 
         volumeSlider.addEventListener("input", () => player.volume = volumeSlider.value);
 
@@ -146,9 +140,6 @@ function onAppReady(app) {
 }
 
 function onVideoReady(v) {
-    artistSpan.textContent = player.data.song.artist.name;
-    songSpan.textContent = player.data.song.name;
-
     let c = player.video.firstChar;
     let w = player.video.firstWord;
     let p = player.video.firstPhrase;
@@ -165,6 +156,37 @@ function onVideoReady(v) {
         p.animate = animatePhrase.bind(this);
         p = p.next;
     }
+
+    console.log(player.getChoruses())
+
+    // generate progress bar with css gradients
+    const choruses = player.getChoruses();
+    const colors = ['red', 'blue'];
+    let progressGradient = 'linear-gradient(90deg, ';
+
+    if (choruses.length === 0) {
+        // If there's no chorus, make it solid of colors[0]
+        progressGradient += `${colors[0]} 0%, ${colors[0]} 100%`;
+    } else {
+        // If there's a chorus, make it solid of colors[1] at that time
+        for (let i = 0; i < choruses.length; i++) {
+            let startPercentage = (choruses[i].startTime / player.video.duration) * 100;
+            let endPercentage = (choruses[i].endTime / player.video.duration) * 100;
+            if (i > 0) {
+                // Add a colors[0] stop at the start of this chorus
+                progressGradient += `${colors[0]} ${startPercentage}%, `;
+            }
+            progressGradient += `${colors[1]} ${startPercentage}%, ${colors[1]} ${endPercentage}%, `;
+            if (i < choruses.length - 1) {
+                // Add a colors[0] stop at the end of this chorus
+                progressGradient += `${colors[0]} ${endPercentage}%, `;
+            }
+        }
+    }
+    progressGradient = progressGradient.slice(0, -2); // Remove trailing comma and space
+    progressGradient += ')';
+
+    progressBar.style.background = progressGradient;
 }
 
 function onTimerReady(t) {
@@ -173,12 +195,9 @@ function onTimerReady(t) {
             .querySelectorAll("#control *")
             .forEach((item) => (item.disabled = false));
     }
-
-    jumpBtn.disabled = !player.video.firstChar;
 }
 
 function onTimeUpdate(pos) {
-    positionDisplay.textContent = String(Math.floor(pos));
     progressBar.value = pos / player.video.duration;
 }
 
@@ -193,8 +212,6 @@ function onPause() {
 }
 
 function onStop() {
-    lyricsData.text = "-";
-
     playBtns.forEach((playBtn) => playBtn.style.display = "inline");
     pauseBtn.style.display = "none" // toggle button to play
 }
@@ -208,9 +225,6 @@ function loadSong(value, isCustom) {
     lyricsData = new LyricsData()
     lyricsData.textOverride = true;
     lyricsData.text = "loading...";
-
-    songSpan.textContent = "";
-    artistSpan.textContent = "";
 
     document
         .querySelectorAll("#control *")
@@ -226,14 +240,14 @@ function loadSong(value, isCustom) {
                 lyricDiffId: songList[value][5]
             }
         }).then(() => {
-            lyricsData.text = "-";
             lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
+            lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
         });
     } else { // fetch from songle
         if (checkUrl(value)) {
             player.createFromSongUrl(value).then(() => {
-                lyricsData.text = "-";
                 lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
+                lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
             });
         } else {
             lyricsData.text = "invalid url";
@@ -301,7 +315,7 @@ class ThreeManager {
         this.scene.background = new THREE.Color(0x22eeff);
         const loader = new GLTFLoader();
 
-        loader.load("src/assets/bedroom_base.glb", function (gltf) {
+        loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             let room = gltf.scene;
             let mirrorBase;
 
@@ -362,8 +376,7 @@ class ThreeManager {
     }
 
     initCamera() {
-        this.camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(baseFov / (window.innerWidth / window.innerHeight) * 1.5, minFov, maxFov),
-            window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(baseFov / (window.innerWidth / window.innerHeight) * 1.5, minFov, maxFov), window.innerWidth / window.innerHeight, 0.1, 1000);
         this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
 
@@ -440,7 +453,7 @@ class ThreeManager {
 
         // set properties for the text
         this.lyrics.fontSize = baseTextSize;
-        this.lyrics.font = "src/assets/NotoSansJP-Bold.ttf"
+        this.lyrics.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
         this.lyrics.textAlign = "center"
         this.lyrics.anchorX = "50%";
@@ -467,8 +480,7 @@ class ThreeManager {
         const b = (0.85 - lyricsData.arousal) * 2
         const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2)
 
-        const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
-            THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1))
+        const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1))
         this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
         this.lyrics.outlineColor = moodColor;
         this.scene.background = moodColor;

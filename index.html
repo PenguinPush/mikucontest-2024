@@ -11,34 +11,33 @@
 <body>
 <div id="view"></div>
 <div id="media"></div>
-<div id="header">
-    <div id="meta">
-        <div id="artist-name"><strong>artist:</strong> <span>-</span></div>
-        <div id="song-name"><strong>song:</strong> <span>-</span></div>
-    </div>
-</div>
+<div id="header"></div>
 <div id="footer">
-    <p>
-        <span id="position"><strong>-</strong> ms</span>
-    </p>
     <div id="control" style="display: none;">
-        <button class="play" disabled style="display: inline;">play</button>
-        <button id="pause" disabled style="display: none;">pause</button>
-        <button id="jump" disabled>jump</button>
-        <button id="rewind" disabled>rewind</button>
-        <input type="range" id="volume" min="0" max="100" value="50" disabled>
-        <input type="range" id="progress" value="0" max="1" step="0.0001" disabled>
-        <select name="song" id="song" disabled>
-            <option value="0">SUPERHERO / めろくる</option>
-            <option value="1" selected>いつか君と話したミライは / タケノコ少年</option>
-            <option value="2">フューチャーノーツ / shikisai</option>
-            <option value="3">未来交響曲 / ヤマギシコージ</option>
-            <option value="4">リアリティ / 歩く人</option>
-            <option value="5">The Marks / 2ouDNS</option>
-            <option value="-1">custom</option>
-        </select>
-        <input type="text" id="custom-song" style="display: none;" value="https://www.youtube.com/watch?v=KdNHFKTKX2s"
-               disabled>
+        <div id="main-controls">
+            <button class="play" disabled style="display: inline;">
+                <img src="src/assets/buttons/button_play.png" alt="play" class="icon">
+            </button>
+            <button id="pause" disabled style="display: none;">
+                <img src="src/assets/buttons/button_pause.png" alt="pause" class="icon">
+            </button>
+            <input type="range" id="progress" value="0" max="1" step="0.0001" disabled style="flex-grow: 1;">
+        </div>
+
+        <div id="settings">
+            <input type="range" id="volume" min="0" max="100" value="50" disabled>
+            <select name="song" id="song" disabled>
+                <option value="0">SUPERHERO / めろくる</option>
+                <option value="1" selected>いつか君と話したミライは / タケノコ少年</option>
+                <option value="2">フューチャーノーツ / shikisai</option>
+                <option value="3">未来交響曲 / ヤマギシコージ</option>
+                <option value="4">リアリティ / 歩く人</option>
+                <option value="5">The Marks / 2ouDNS</option>
+                <option value="-1">custom</option>
+            </select>
+            <input type="text" id="custom-song" style="display: none;"
+                   value="https://www.youtube.com/watch?v=KdNHFKTKX2s" disabled>
+        </div>
     </div>
 </div>
 <script type="module" src="src/App.js"></script>
