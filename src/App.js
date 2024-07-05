@@ -258,6 +258,7 @@ function loadSong(value, isCustom) {
     lyricsData = new LyricsData()
     lyricsData.textOverride = true;
     lyricsData.text = "loading...";
+    lyricsData.floatingChars = [];
 
     // reset ui
     progressBar.style.background = "#d3d3d3";
@@ -559,7 +560,6 @@ class ThreeManager {
 
     // Draws all current floating characters
     updateFloatingChars(){
-        // Find a way to skip all chars that shouldn't be displayed, along with reset the char list whenever the song is changed
         for (let i=0; i<lyricsData.floatingChars.length; i++){
             let currChar = lyricsData.floatingChars[i];
             if (currChar.object == null){
