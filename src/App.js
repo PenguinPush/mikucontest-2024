@@ -590,15 +590,16 @@ class ThreeManager {
             greyscale: false,
             disable: false
         };
-	
+
         const halftonePass = new HalftonePass(window.innerWidth, window.innerHeight, params);
         // this.composer.addPass(halftonePass);
 
         const outputPass = new OutputPass();
         this.composer.addPass(outputPass);
+    }
 
     // Draws all current floating characters
-    updateFloatingChars(){
+    updateFloatingChars() {
         for (let i=0; i<lyricsData.floatingChars.length; i++){
             let currChar = lyricsData.floatingChars[i];
             if (currChar.object == null){
