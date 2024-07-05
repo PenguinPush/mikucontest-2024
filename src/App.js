@@ -254,11 +254,14 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
     player.volume = volumeSlider.value
 
+    for (let i=0; i<lyricsData.floatingChars.length; i++){
+        threeMng.scene.remove(lyricsData.floatingChars[i].object)
+    }
+
     // initialize lyrics data
     lyricsData = new LyricsData()
     lyricsData.textOverride = true;
     lyricsData.text = "loading...";
-    lyricsData.floatingChars = [];
 
     // reset ui
     progressBar.style.background = "#d3d3d3";
