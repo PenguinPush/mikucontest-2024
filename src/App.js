@@ -9,10 +9,7 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
-
-import {
-    maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPos, cameraRot, textPos
-} from "./constants";
+import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, cameraPos, cameraRot, textPos, songList, cameraPositions} from "./constants";
 
 // lyrics information
 class LyricsData {
@@ -64,6 +61,8 @@ const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
 const songSelector = document.querySelector("#song");
 const customSong = document.querySelector("#custom-song");
+const leftArrow = document.querySelector(".left");
+const rightArrow = document.querySelector(".right");
 
 // initialize main function
 function initMain() {
@@ -296,6 +295,14 @@ function checkUrl(urlString) {
 // everything 3d
 class ThreeManager {
     constructor() {
+        this.cameraPosIndex = 0;
+        leftArrow.addEventListener("click", ()=>{
+            this.goRight();
+        });
+        rightArrow.addEventListener("click", ()=>{
+            this.goLeft();
+        });
+
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -308,6 +315,16 @@ class ThreeManager {
         this.initCamera();
         this.initControls();
         this.initLyrics();
+    }
+
+    goLeft(){
+        this.cameraPosIndex -= 1;
+        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
+    }
+
+    goRight(){
+        this.cameraPosIndex += 1;
+        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
     }
 
     initScene() {
@@ -380,6 +397,8 @@ class ThreeManager {
         this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
         this.clock = new THREE.Clock();
 
+        let cameraPos = cameraPositions[this.cameraPosIndex].pos
+        let cameraRot = cameraPositions[this.cameraPosIndex].rot
         this.camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
         this.cameraControls.distance = this.cameraControls.minDistance = this.cameraControls.maxDistance = 0.1;
@@ -463,11 +482,14 @@ class ThreeManager {
         this.lyrics.outlineColor = (0, 0, 0);
         this.lyrics.sdfGlyphSize = 128;
 
-        this.lyrics.position.set(...textPos);
-        this.lyrics.lookAt(...cameraPos);
+        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     update() {
+        let cameraPos = cameraPositions[this.cameraPosIndex].pos
+        let cameraRot = cameraPositions[this.cameraPosIndex].rot
+
         // update lyrics
         this.lyrics.text = lyricsData.word;
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
@@ -492,7 +514,7 @@ class ThreeManager {
         } // if the cursor exits the radius, scale the strength of the movement down in tandem with how far the cursor goes
 
         if (this.isTouching) {
-            // complicated math to make the camera translate along its local z plane instead of the global one
+            // easy math to make the camera translate along its local z plane instead of the global one
             let forward = this.camera.getWorldDirection(new THREE.Vector3()).negate();
             let up = this.camera.up.clone();
             let right = new THREE.Vector3().crossVectors(forward, up);
