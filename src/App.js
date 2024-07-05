@@ -285,8 +285,12 @@ function checkUrl(urlString) {
 class ThreeManager {
     constructor() {
         this.cameraPosIndex = 0;
-        leftArrow.addEventListener("click", this.goLeft);
-        rightArrow.addEventListener("click", this.goRight);
+        leftArrow.addEventListener("click", ()=>{
+            this.goRight();
+        });
+        rightArrow.addEventListener("click", ()=>{
+            this.goLeft();
+        });
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(window.innerWidth, window.innerHeight);
