@@ -507,19 +507,19 @@ class ThreeManager {
         document.addEventListener("touchend", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30); // delay to fix bug where it gets stuck
+            }, 1000/30); // delay to fix bug where it gets stuck
         })
 
         document.addEventListener("touchcancel", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30);
+            }, 1000/30);
         })
 
         document.addEventListener("mouseleave", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
-            }, 30);
+            }, 1000/30);
         })
     }
 
