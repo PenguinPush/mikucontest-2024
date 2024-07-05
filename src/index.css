@@ -76,6 +76,13 @@ body {
     justify-content: space-between;
 }
 
+/* Mobile */
+/* @media(hover: none){
+    #arrow-container {
+        display: none;
+    }
+} */
+
 .left {
     transform: rotate(90deg)
 }

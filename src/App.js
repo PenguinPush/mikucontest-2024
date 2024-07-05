@@ -285,14 +285,9 @@ function checkUrl(urlString) {
 class ThreeManager {
     constructor() {
         this.cameraPosIndex = 0;
-        leftArrow.addEventListener("click", ()=>{
-            this.cameraPosIndex -= 1;
-            this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
-        });
-        rightArrow.addEventListener("click", ()=>{
-            this.cameraPosIndex += 1;
-            this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
-        });
+        leftArrow.addEventListener("click", this.goLeft);
+        rightArrow.addEventListener("click", this.goRight);
+
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio)
@@ -305,6 +300,16 @@ class ThreeManager {
         this.initCamera();
         this.initControls();
         this.initLyrics();
+    }
+
+    goLeft(){
+        this.cameraPosIndex -= 1;
+        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
+    }
+
+    goRight(){
+        this.cameraPosIndex += 1;
+        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
     }
 
     initScene() {
