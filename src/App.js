@@ -37,6 +37,7 @@ class LyricsData {
 
         this.floatingChars = [];
         this.previousUnits = new Set();
+        this.previousRandom = -1;
 
         this.textOverride = false; // when true, display this.text instead of the desired character/word/phrase
         this.textScale = 1;
@@ -307,10 +308,15 @@ function loadSong(value, isCustom) {
 
 function animateChar(pos, unit) {
     if (!lyricsData.previousUnits.has(unit)) {
+        let randomNum = Math.random();
+        while (Math.abs(randomNum - lyricsData.previousRandom) < 0.2){
+            randomNum = Math.random();
+        }
+        lyricsData.previousRandom = randomNum;
         lyricsData.floatingChars.push({
             text: unit.text,
             object: null,
-            startPosition: [2.8, 0.8 + Math.random(), 2.5],
+            startPosition: [2.8, 0.8 + randomNum, 2.5],
             creationTime: unit._data.startTime,
             movementVector: [-1, 0, 0],
             currentPosition: [0, 0, 0],
