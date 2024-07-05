@@ -70,6 +70,7 @@ const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
 const songSelector = document.querySelector("#song");
 const customSong = document.querySelector("#custom-song");
+const accessibility = document.querySelector("#accessibility");
 const leftArrow = document.querySelector(".left");
 const rightArrow = document.querySelector(".right");
 
@@ -133,6 +134,20 @@ function onAppReady(app) {
         customSong.addEventListener("change", () => {
             loadSong(customSong.value, true);
         });
+
+        accessibility.addEventListener("change", () => {
+            if (threeMng) {
+                if (accessibility.checked) {
+                    threeMng.movementStrength = 0;
+                    threeMng.rotateStrength = 1 / 24;
+                    threeMng.cameraControls.smoothTime = 0.1;
+                } else {
+                    threeMng.movementStrength = 1 / 10;
+                    threeMng.rotateStrength = 1 / 12;
+                    threeMng.cameraControls.smoothTime = 0.25;
+                }
+            }
+        });
     }
 
     if (!app.songUrl) {
@@ -169,29 +184,33 @@ function onVideoReady(v) {
 
     // generate progress bar with css gradients
     const choruses = player.getChoruses();
-    const colors = ['red', 'blue'];
-    let progressGradient = 'linear-gradient(90deg, ';
+    const colors = ['#78f0d7', '#ff629d'];
+    let progressGradient = 'linear-gradient(60deg, ';
 
     if (choruses.length === 0) {
-        // If there's no chorus, make it solid of colors[0]
         progressGradient += `${colors[0]} 0%, ${colors[0]} 100%`;
     } else {
-        // If there's a chorus, make it solid of colors[1] at that time
+        // place colors at the choruses
+        progressGradient += `${colors[0]} 0%, `;
         for (let i = 0; i < choruses.length; i++) {
             let startPercentage = (choruses[i].startTime / player.video.duration) * 100;
             let endPercentage = (choruses[i].endTime / player.video.duration) * 100;
-            if (i > 0) {
-                // Add a colors[0] stop at the start of this chorus
+            if (i === 0) {
+                // start with non-chorus
+                progressGradient += `${colors[0]} ${startPercentage}%, `;
+            } else if (i > 0) {
+                // end the non-chorus segment with a stop
                 progressGradient += `${colors[0]} ${startPercentage}%, `;
             }
+            // place the chorus segment stops
             progressGradient += `${colors[1]} ${startPercentage}%, ${colors[1]} ${endPercentage}%, `;
             if (i < choruses.length - 1) {
-                // Add a colors[0] stop at the end of this chorus
+                // close off the last chorus with a non-chorus stop
                 progressGradient += `${colors[0]} ${endPercentage}%, `;
             }
         }
     }
-    progressGradient = progressGradient.slice(0, -2); // Remove trailing comma and space
+    progressGradient = progressGradient.slice(0, -2); // remove trailing comma and space
     progressGradient += ')';
 
     progressBar.style.background = progressGradient;
@@ -234,9 +253,12 @@ function loadSong(value, isCustom) {
     lyricsData.textOverride = true;
     lyricsData.text = "loading...";
 
+    // reset ui
+    progressBar.style.background = "#d3d3d3";
     document
         .querySelectorAll("#control *")
         .forEach((item) => (item.disabled = true));
+    accessibility.disabled = false;
 
     if (!isCustom) {
         player.createFromSongUrl(songList[value][0], { // fetch from constants
@@ -305,6 +327,9 @@ function checkUrl(urlString) {
 class ThreeManager {
     constructor() {
         this.cameraPosIndex = 0;
+        this.movementStrength = 1 / 10;
+        this.rotateStrength = 1 / 12;
+
         leftArrow.addEventListener("click", () => {
             this.goLeft();
         });
@@ -387,11 +412,11 @@ class ThreeManager {
         })
 
         const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
-        light.position.set(3.3041769266128, 2.0788733959198, -0.049741268157958984);
+        light.position.set(3.03, 2.078, 0.05);
         light.castShadow = true;
 
         this.moodLight = new THREE.RectAreaLight(0xffffff, 0.5, 5, 3);
-        this.moodLight.position.set(3.3041769266128, 2.6788733959198, -0.049741268157958984);
+        this.moodLight.position.set(3.30, 2.67, -0.05);
         this.moodLight.lookAt(this.moodLight.position.x, -10, this.moodLight.position.z);
 
         const ambientLight = new THREE.AmbientLight(0xd4f8ff, 0.2);
@@ -411,9 +436,6 @@ class ThreeManager {
         this.camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
         this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
         this.cameraControls.distance = this.cameraControls.minDistance = this.cameraControls.maxDistance = 0.1;
-
-        this.movementStrength = 1 / 10;
-        this.rotateStrength = 1 / 12;
 
         this.cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
         this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
@@ -444,7 +466,6 @@ class ThreeManager {
                 this.inputX = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
                 this.inputY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
                 this.isTouching = true;
-
             }
         })
 
