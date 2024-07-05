@@ -6,7 +6,7 @@ body {
     pointer-events: none;
 }
 
-#media, #header, #footer, #control, #view {
+#media, #header, #footer, #control, #view, #arrow-container {
     pointer-events: auto;
 }
 
@@ -67,3 +67,52 @@ body {
 #control > button:last-child {
     margin-right: 0;
 }
+
+#arrow-container {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.left {
+    transform: rotate(90deg)
+}
+
+.right {
+    transform: rotate(-90deg)
+}
+
+.chevron {
+    position: relative;
+    text-align: center;
+    padding: 0px 36px;
+    margin-bottom: 6px;
+    height: 10px;
+    width: 20px;
+    opacity: 50%;
+  }
+  .chevron:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 51%;
+    background: whitesmoke;
+    transform: skew(0deg, 20deg);
+  }
+  .chevron:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 50%;
+    background: whitesmoke;
+    transform: skew(0deg, -20deg);
+  }
+  .chevron:hover {
+    opacity: 80%;
+  }
