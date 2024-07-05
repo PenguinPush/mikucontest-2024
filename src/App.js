@@ -7,7 +7,6 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 CameraControls.install({THREE: THREE});
 import {
@@ -63,6 +62,7 @@ class LyricsData {
 // global variables
 let player, threeMng;
 let lyricsData = new LyricsData();
+let position = 0;
 
 // initialize html elements
 const playBtns = document.querySelectorAll(".play");
@@ -104,6 +104,7 @@ function _initPlayer() {
     player.addListener({
         onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onPlay, onPause, onStop,
     });
+    player.fps = 60;
 }
 
 // player event handlers
@@ -181,8 +182,6 @@ function onVideoReady(v) {
         p = p.next;
     }
 
-    console.log(player.getChoruses())
-
     // generate progress bar with css gradients
     const choruses = player.getChoruses();
     const colors = ['#78f0d7', '#ff629d'];
@@ -227,6 +226,7 @@ function onTimerReady(t) {
 
 function onTimeUpdate(pos) {
     progressBar.value = pos / player.video.duration;
+    position = pos;
 }
 
 function onPlay() {
@@ -312,7 +312,7 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    threeMng.update();
+    threeMng.update(position);
     window.requestAnimationFrame(() => update());
 }
 
@@ -330,6 +330,9 @@ class ThreeManager {
         this.cameraPosIndex = 0;
         this.movementStrength = 1 / 10;
         this.rotateStrength = 1 / 12;
+
+        this.innerSky = null;
+        this.outerSky = null;
 
         leftArrow.addEventListener("click", () => {
             this.goLeft();
@@ -365,15 +368,9 @@ class ThreeManager {
     initScene() {
         this.scene = new THREE.Scene();
         const loader = new GLTFLoader();
-        const bgLoader = new RGBELoader();
-
-        bgLoader.load("src/assets/sky.hdr", function (texture){
-            texture.mapping = THREE.EquirectangularReflectionMapping;
-            this.scene.background = texture;
-        }.bind(this));
 
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
-            let room = gltf.scene;
+            const room = gltf.scene;
             let mirrorBase;
 
             // edit the bedroom
@@ -387,11 +384,6 @@ class ThreeManager {
                 if (item instanceof THREE.Light) {
                     // disable blender lights, they don't translate well
                     item.intensity = 0;
-                }
-
-                if (item instanceof THREE.PerspectiveCamera) {
-                    // log cameras
-                    console.log(item.position, item.rotation)
                 }
 
                 if (item.material) {
@@ -409,6 +401,23 @@ class ThreeManager {
                         mirror.rotation.set(0, -Math.PI / 2, 0)
 
                         mirrorBase = item;
+                    }
+
+                    if (item.material.name === "inner sky") {
+                        item.material.color = new THREE.Color(0, 0, 0);
+                        item.material.opacity = 0.8;
+
+                        item.castShadow = false;
+                        item.receiveShadow = false;
+
+                        threeMng.innerSky = item;
+                    }
+
+                    if (item.material.name === "outer sky") {
+                        item.castShadow = false;
+                        item.receiveShadow = false;
+
+                        threeMng.outerSky = item;
                     }
                 }
             })
@@ -522,7 +531,7 @@ class ThreeManager {
         this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
-    update() {
+    update(pos) {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
@@ -546,6 +555,16 @@ class ThreeManager {
 
         this.moodLight.color = this.moodColor.offsetHSL(0, 1, 0);
         this.lyrics.outlineColor = this.moodColor;
+
+        if (this.innerSky) {
+            this.innerSky.material.color = this.moodColor.offsetHSL(0, 1, 0.1);
+            this.innerSky.rotation.y = 1/6000 * pos;
+        }
+
+        if (this.outerSky) {
+            this.outerSky.rotation.y = -1/8000 * pos;
+        }
+
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
