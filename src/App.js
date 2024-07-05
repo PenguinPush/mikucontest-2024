@@ -9,7 +9,16 @@ import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
 
 CameraControls.install({THREE: THREE});
-import {maxTextScale, minTextScale, baseTextSize, baseFov, minFov, maxFov, songList, cameraPositions} from "./constants";
+import {
+    maxTextScale,
+    minTextScale,
+    baseTextSize,
+    baseFov,
+    minFov,
+    maxFov,
+    songList,
+    cameraPositions
+} from "./constants";
 
 // lyrics information
 class LyricsData {
@@ -296,11 +305,11 @@ function checkUrl(urlString) {
 class ThreeManager {
     constructor() {
         this.cameraPosIndex = 0;
-        leftArrow.addEventListener("click", ()=>{
-            this.goRight();
-        });
-        rightArrow.addEventListener("click", ()=>{
+        leftArrow.addEventListener("click", () => {
             this.goLeft();
+        });
+        rightArrow.addEventListener("click", () => {
+            this.goRight();
         });
 
         this.renderer = new THREE.WebGLRenderer({antialias: true});
@@ -317,12 +326,12 @@ class ThreeManager {
         this.initLyrics();
     }
 
-    goLeft(){
+    goLeft() {
         this.cameraPosIndex -= 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
     }
 
-    goRight(){
+    goRight() {
         this.cameraPosIndex += 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
     }
@@ -498,14 +507,19 @@ class ThreeManager {
         this.lyrics.sync();
 
         // calculate colors to update lighting based on valence/arousal values
-        const r = (1.1 - lyricsData.valence) * 2
-        const b = (0.85 - lyricsData.arousal) * 2
-        const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2)
+        if (lyricsData.valence >= 0 && lyricsData.arousal >= 0) {
+            const r = (1.1 - lyricsData.valence) * 2;
+            const b = (0.85 - lyricsData.arousal) * 2;
+            const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
 
-        const moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1))
-        this.moodLight.color = moodColor.offsetHSL(0, 1, 0);
-        this.lyrics.outlineColor = moodColor;
-        this.scene.background = moodColor;
+            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1));
+        } else {
+            this.moodColor = new THREE.Color(1, 1, 1);
+        }
+
+        this.moodLight.color = this.moodColor.offsetHSL(0, 1, 0);
+        this.lyrics.outlineColor = this.moodColor;
+        this.scene.background = this.moodColor;
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
