@@ -317,7 +317,7 @@ function animateChar(pos, unit) {
         lyricsData.floatingChars.push({
             text: unit.text,
             object: null,
-            startPosition: [1.3, 0.8 + randomNum, 2.5],
+            startPosition: [1.3, 0.9 + randomNum, 2.5 + Math.random()],
             creationTime: unit._data.startTime,
             movementVector: [1, 0, 0],
             currentPosition: [0, 0, 0],
@@ -628,13 +628,16 @@ class ThreeManager {
                 // TODO: Make the lyrics face the right direction
                 charObject.position.set(...currChar.currentPosition);
                 charObject.rotation.y = Math.PI;
+                charObject.rotation.z = (0.5 - Math.random()) / 4;
 
                 currChar.object = charObject;
             }
+
             currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0]*(player.videoPosition - currChar.creationTime)*0.001;
             currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1]*(player.videoPosition - currChar.creationTime)*0.001;
             currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2]*(player.videoPosition - currChar.creationTime)*0.001;
 
+            currChar.object.outlineColor = this.moodColor;
             currChar.object.position.set(...currChar.currentPosition);
             currChar.object.sync();
 
