@@ -25,6 +25,7 @@ import {
     songList,
     cameraPositions,
     BEDROOM,
+    FULL_VIEW,
 } from "./constants";
 
 // lyrics information
@@ -659,7 +660,7 @@ class ThreeManager {
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         // TODO: Do this in a better way
-        if (this.cameraPosIndex != BEDROOM){
+        if (this.cameraPosIndex != BEDROOM && this.cameraPosIndex != FULL_VIEW){
             this.lyrics.text = "";
         }
         this.lyrics.sync();
