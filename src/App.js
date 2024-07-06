@@ -316,9 +316,9 @@ function animateChar(pos, unit) {
         lyricsData.floatingChars.push({
             text: unit.text,
             object: null,
-            startPosition: [2.8, 0.8 + randomNum, 2.5],
+            startPosition: [1.3, 0.8 + randomNum, 2.5],
             creationTime: unit._data.startTime,
-            movementVector: [-1, 0, 0],
+            movementVector: [1, 0, 0],
             currentPosition: [0, 0, 0],
         });
         lyricsData.char = unit.text;
