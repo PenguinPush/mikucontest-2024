@@ -271,6 +271,7 @@ function loadSong(value, isCustom) {
 
     // reset ui
     progressBar.style.background = "#d3d3d3";
+    progressBar.value = 0;
     document
         .querySelectorAll("#control *")
         .forEach((item) => (item.disabled = true));

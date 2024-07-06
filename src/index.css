@@ -71,7 +71,7 @@ body {
 }
 
 #main-controls > button {
-    background: url("assets/buttons/button_base.png");
+    background: #ffffff;
     background-size: cover;
     border: none;
     cursor: pointer;
@@ -84,9 +84,13 @@ body {
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
-#main-controls > button:hover {
+#main-controls > button:hover:enabled {
     outline-width: 4px;
     transform: translateY(-6px);
+}
+
+#main-controls > button:disabled {
+    background: #d3d3d3;
 }
 
 #main-controls > button img {
@@ -141,14 +145,22 @@ body {
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
-#progress::-webkit-slider-thumb:hover {
+#progress:enabled::-webkit-slider-thumb:hover{
     outline-width: 4px;
     transform: translateY(-4px);
 }
 
-#progress::-moz-range-thumb:hover {
+#progress:enabled::-moz-range-thumb:hover{
     outline-width: 4px;
     transform: translateY(-4px);
+}
+
+#progress:disabled::-webkit-slider-thumb {
+    background: #d3d3d3;
+}
+
+#progress:disabled::-moz-range-thumb {
+    background: #d3d3d3;
 }
 
 #settings {
@@ -172,6 +184,18 @@ body {
     border-radius: 20px;
     -webkit-appearance: none;
     -moz-appearance: none;
+
+    outline: 0 solid #78f0d7;
+    transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
+}
+
+#song:hover:enabled {
+    outline-width: 4px;
+    transform: translateY(-6px);
+}
+
+#song:disabled {
+    background-color: #d3d3d3;
 }
 
 #meta {
