@@ -24,7 +24,7 @@ import {
     maxFov,
     songList,
     cameraPositions,
-    BEDROOM,
+    BEDROOM
 } from "./constants";
 
 // lyrics information
@@ -48,6 +48,10 @@ class LyricsData {
         this.maxAmplitude = 0;
         this.valence = -1;
         this.arousal = -1;
+        this.language = "";
+        this.enIndex = 0;
+
+        this.moodColor = new THREE.Color(1, 1, 1);
     }
 
     // calculate text effects
@@ -63,6 +67,18 @@ class LyricsData {
         this.stretch += (this.textScale - this.textScaleDelta) * 10;
         this.stretch *= 0.9998; // decay squash & stretch
         this.stretch = THREE.MathUtils.clamp(this.stretch, -0.7, 0.7); // clamp squash & stretch
+
+        if (lyricsData.valence >= 0 && lyricsData.arousal >= 0) {
+            const r = (1.1 - lyricsData.valence) * 2;
+            const b = (0.85 - lyricsData.arousal) * 2;
+            const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
+
+            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
+                THREE.MathUtils.clamp(g, 0, 1),
+                THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
+        } else {
+            this.moodColor = new THREE.Color(1, 1, 1);
+        }
     }
 
     normalizeValenceArousal(valenceArousal) {
@@ -260,7 +276,7 @@ function loadSong(value, isCustom) {
     player.video && player.requestPause();
     player.volume = volumeSlider.value
 
-    for (let i=0; i<lyricsData.floatingChars.length; i++){
+    for (let i = 0; i < lyricsData.floatingChars.length; i++) {
         threeMng.scene.remove(lyricsData.floatingChars[i].object)
     }
 
@@ -309,19 +325,38 @@ function loadSong(value, isCustom) {
 
 function animateChar(pos, unit) {
     if (!lyricsData.previousUnits.has(unit)) {
-        let randomNum = Math.random();
-        while (Math.abs(randomNum - lyricsData.previousRandom) < 0.2){
-            randomNum = Math.random();
+        let randomNum = 0.5 - Math.random();
+        while (Math.abs(randomNum - lyricsData.previousRandom) < 0.2) {
+            randomNum = 0.5 - Math.random();
         }
         lyricsData.previousRandom = randomNum;
-        lyricsData.floatingChars.push({
-            text: unit.text,
-            object: null,
-            startPosition: [1.3, 0.9 + randomNum, 2.5 + Math.random()],
-            creationTime: unit._data.startTime,
-            movementVector: [1, 0, 0],
-            currentPosition: [0, 0, 0],
-        });
+        lyricsData.language = player.video.findWord(unit.startTime + 1).language;
+
+        if (lyricsData.language === "en") {
+            // place the text closer if it's english
+            lyricsData.floatingChars.push({
+                text: unit.text,
+                object: null,
+                startPosition: [1.3, 1.75 - lyricsData.enIndex * 0.2, 3.2],
+                creationTime: unit.startTime,
+                movementVector: [1, 0, 0],
+                currentPosition: [0, 0, 0],
+            });
+
+            lyricsData.enIndex = (lyricsData.enIndex + 1) % 5
+        } else {
+            lyricsData.floatingChars.push({
+                text: unit.text,
+                object: null,
+                startPosition: [1.3, 1.35 + randomNum, 3.2 + (0.5 - Math.random())],
+                creationTime: unit.startTime,
+                movementVector: [1, 0, 0],
+                currentPosition: [0, 0, 0],
+            });
+
+            lyricsData.enIndex = 0
+        }
+
         lyricsData.char = unit.text;
         lyricsData.previousUnits.add(unit);
     }
@@ -607,21 +642,20 @@ class ThreeManager {
 
     // Draws all current floating characters
     updateFloatingChars() {
-        for (let i=0; i<lyricsData.floatingChars.length; i++){
+        for (let i = 0; i < lyricsData.floatingChars.length; i++) {
             let currChar = lyricsData.floatingChars[i];
-            if (currChar.object == null){
+            if (currChar.object == null) {
                 let charObject = new Text();
                 this.scene.add(charObject);
-        
+
                 charObject.fontSize = baseTextSize / 4;
                 charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
-        
+
                 charObject.textAlign = "center"
                 charObject.anchorX = "50%";
                 charObject.anchorY = "50%";
                 charObject.outlineOffsetX = "8%";
                 charObject.outlineOffsetY = "6%";
-                charObject.outlineColor = (0, 0, 0);
                 charObject.sdfGlyphSize = 128;
                 charObject.text = currChar.text;
 
@@ -633,11 +667,11 @@ class ThreeManager {
                 currChar.object = charObject;
             }
 
-            currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0]*(player.videoPosition - currChar.creationTime)*0.001;
-            currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1]*(player.videoPosition - currChar.creationTime)*0.001;
-            currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2]*(player.videoPosition - currChar.creationTime)*0.001;
+            currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime) * 0.001;
+            currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime) * 0.001;
+            currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime) * 0.001;
 
-            currChar.object.outlineColor = this.moodColor;
+            currChar.object.outlineColor = lyricsData.moodColor;
             currChar.object.position.set(...currChar.currentPosition);
             currChar.object.sync();
 
@@ -652,37 +686,25 @@ class ThreeManager {
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
         this.updateFloatingChars();
-        
+
         // update lyrics
         this.lyrics.text = lyricsData.word;
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         // TODO: Do this in a better way
-        if (this.cameraPosIndex != BEDROOM){
+        if (this.cameraPosIndex != BEDROOM) {
             this.lyrics.text = "";
         }
         this.lyrics.sync();
 
         // calculate colors to update lighting based on valence/arousal values
-        if (lyricsData.valence >= 0 && lyricsData.arousal >= 0) {
-            const r = (1.1 - lyricsData.valence) * 2;
-            const b = (0.85 - lyricsData.arousal) * 2;
-            const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
-
-            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
-                THREE.MathUtils.clamp(g, 0, 1),
-                THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
-        } else {
-            this.moodColor = new THREE.Color(1, 1, 1);
-        }
-
-        this.moodLight.color = this.moodColor;
-        this.lyrics.outlineColor = this.moodColor;
+        this.moodLight.color = lyricsData.moodColor;
+        this.lyrics.outlineColor = lyricsData.moodColor;
 
         this.innerSky.rotation.y = -1 / 6000 * pos;
 
-        this.coloredSky.material.color = new THREE.Color().addColors(this.moodColor, new THREE.Color(0.2, 0.2, 0.2));
+        this.coloredSky.material.color = new THREE.Color().addColors(lyricsData.moodColor, new THREE.Color(0.2, 0.2, 0.2));
         this.coloredSky.rotation.y = 1 / 6000 * pos;
 
         this.outerSky.rotation.y = -1 / 8000 * pos;
