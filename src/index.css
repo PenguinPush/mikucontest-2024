@@ -107,7 +107,7 @@ body {
     -moz-appearance: none;
     appearance: none;
     height: 16px;
-    background: #d3d3d3;
+    background: repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%);
     outline: 4px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     position: relative;
@@ -145,12 +145,12 @@ body {
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
-#progress:enabled::-webkit-slider-thumb:hover{
+#progress:enabled::-webkit-slider-thumb:hover {
     outline-width: 4px;
     transform: translateY(-4px);
 }
 
-#progress:enabled::-moz-range-thumb:hover{
+#progress:enabled::-moz-range-thumb:hover {
     outline-width: 4px;
     transform: translateY(-4px);
 }
@@ -163,13 +163,82 @@ body {
     background: #d3d3d3;
 }
 
+#volume {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    height: 8px;
+    outline: 4px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    position: relative;
+    width: 25%;
+
+    background: linear-gradient(90deg, #78f0d7 50%, #d3d3d3 50%);
+}
+
+#volume::-webkit-slider-runnable-track {
+    border-radius: 12px;
+}
+
+#volume::-moz-range-track {
+    border-radius: 12px;
+}
+
+#volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    background-color: #ffffff;
+    background-image: url("assets/buttons/button_volume.png");
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    cursor: pointer;
+    border-radius: 20px;
+
+    outline: 0 solid #78f0d7;
+    transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
+}
+
+#volume::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background-color: #ffffff;
+    background-image: url("assets/buttons/button_volume.png");
+    background-repeat: no-repeat;
+    background-size: 24px 24px;
+    cursor: pointer;
+    border-radius: 20px;
+
+    outline: 0 solid #78f0d7;
+    transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
+}
+
+#volume:enabled::-webkit-slider-thumb:hover {
+    outline-width: 4px;
+    transform: translateY(-4px);
+}
+
+#volume:enabled::-moz-range-thumb:hover {
+    outline-width: 4px;
+    transform: translateY(-4px);
+}
+
+#volume:disabled::-webkit-slider-thumb {
+    background-color: #d3d3d3;
+}
+
+#volume:disabled::-moz-range-thumb {
+    background-color: #d3d3d3;
+}
+
 #settings {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.2);
-    padding: 4px;
+    padding: 8px;
 }
 
 #song {

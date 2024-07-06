@@ -147,7 +147,10 @@ function onAppReady(app) {
 
         pauseBtn.addEventListener("click", () => player.video && player.requestPause());
 
-        volumeSlider.addEventListener("input", () => player.volume = volumeSlider.value);
+        volumeSlider.addEventListener("input", () => {
+            player.volume = volumeSlider.value;
+            volumeSlider.style.background = `linear-gradient(90deg, #78f0d7 ${volumeSlider.value}%, #d3d3d3 ${volumeSlider.value}%)`;
+        });
 
         progressBar.addEventListener("input", () => player.requestMediaSeek(progressBar.value * player.video.duration));
 
@@ -287,12 +290,13 @@ function loadSong(value, isCustom) {
     lyricsData.text = "loading...";
 
     // reset ui
-    progressBar.style.background = "#d3d3d3";
+    progressBar.style.background = "repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%)";
     progressBar.value = 0;
     document
         .querySelectorAll("#control *")
         .forEach((item) => (item.disabled = true));
     accessibility.disabled = false;
+    volumeSlider.disabled = false;
 
     if (!isCustom) {
         player.createFromSongUrl(songList[value][0], { // fetch from constants
@@ -431,11 +435,17 @@ class ThreeManager {
     goLeft() {
         this.cameraPosIndex -= 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
+
+        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     goRight() {
         this.cameraPosIndex += 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
+
+        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     initScene() {
@@ -474,6 +484,7 @@ class ThreeManager {
                         mirror.rotation.set(0, -Math.PI / 2, 0)
 
                         mirrorBase = item;
+                        threeMng.scene.add(mirror);
                     }
                 }
 
@@ -686,9 +697,6 @@ class ThreeManager {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
-        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-        this.lyrics.lookAt(...cameraPos);
-
         this.updateFloatingChars();
 
         // update lyrics
@@ -697,7 +705,7 @@ class ThreeManager {
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         // TODO: Do this in a better way
-        if (this.cameraPosIndex != BEDROOM && this.cameraPosIndex != FULL_VIEW){
+        if (this.cameraPosIndex != BEDROOM && this.cameraPosIndex != FULL_VIEW) {
             this.lyrics.text = "";
         }
         this.lyrics.sync();

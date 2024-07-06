@@ -33,9 +33,9 @@ export const cameraPositions = [
     },
 
     { // Full view
-        pos: [1, 1.4, -1.5],
-        rot: [3.8 * Math.PI / 3, Math.PI/2],
-        text: [2.71, 1.00, -0.04]
+        pos: [1, 1.2, -2.2],
+        rot: [3.9 * Math.PI / 3, Math.PI/2],
+        text: [3, 1.2, 1]
     },
 
     { // Notebook
