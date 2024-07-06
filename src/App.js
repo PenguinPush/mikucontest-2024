@@ -626,6 +626,7 @@ class ThreeManager {
 
                 // TODO: Make the lyrics face the right direction
                 charObject.position.set(...currChar.currentPosition);
+                charObject.rotation.y = Math.PI;
 
                 currChar.object = charObject;
             }
