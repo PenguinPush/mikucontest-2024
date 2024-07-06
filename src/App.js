@@ -652,6 +652,9 @@ class ThreeManager {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
+        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.lyrics.lookAt(...cameraPos);
+
         this.updateFloatingChars();
         
         // update lyrics
