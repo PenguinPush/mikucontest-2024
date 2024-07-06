@@ -22,7 +22,7 @@ export const cameraPositions = [
         text: [2.71, 1.3, -0.04]
     },
     { // Window
-        pos: [1.85, 1.2, 0.35],
+        pos: [1.85, 1.2, 0.7],
         rot: [Math.PI, Math.PI / 2],
         text: [1, 1.07, 0]
     },
