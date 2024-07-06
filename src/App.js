@@ -24,7 +24,8 @@ import {
     maxFov,
     songList,
     cameraPositions,
-    BEDROOM
+    BEDROOM,
+    FULL_VIEW,
 } from "./constants";
 
 // lyrics information
@@ -685,6 +686,9 @@ class ThreeManager {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
+        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.lyrics.lookAt(...cameraPos);
+
         this.updateFloatingChars();
 
         // update lyrics
@@ -693,7 +697,7 @@ class ThreeManager {
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         // TODO: Do this in a better way
-        if (this.cameraPosIndex != BEDROOM) {
+        if (this.cameraPosIndex != BEDROOM && this.cameraPosIndex != FULL_VIEW){
             this.lyrics.text = "";
         }
         this.lyrics.sync();

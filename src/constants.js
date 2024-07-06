@@ -32,6 +32,12 @@ export const cameraPositions = [
         text: [1, 1.07, 0]
     },
 
+    { // Full view
+        pos: [1, 1.4, -1.5],
+        rot: [3.8 * Math.PI / 3, Math.PI/2],
+        text: [2.71, 1.00, -0.04]
+    },
+
     { // Notebook
         pos: [5, 1.4, -1.1],
         rot: [0, Math.PI/6],
@@ -42,4 +48,5 @@ export const cameraPositions = [
 export const BEDROOM = 0;
 export const WINDOW = 1;
 export const TV = 2;
-export const NOTEBOOK = 3;
+export const FULL_VIEW = 3;
+export const NOTEBOOK = 4;
