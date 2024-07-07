@@ -441,12 +441,12 @@ body {
     pointer-events: none;
 }
 
-#credits:hover + .credits-text {
-    opacity: 1;
-}
-
 /* PC hover interactions & styling */
 @media (hover: hover) and (pointer: fine) {
+    #credits:hover + .credits-text {
+        opacity: 1;
+    }
+
     .chevron {
         position: relative;
         text-align: center;
@@ -558,6 +558,14 @@ body {
 
 /* mobile hover interactions & styling */
 @media (pointer: none), (pointer: coarse) {
+    .credits-text {
+        width: calc(100vw - 2em);
+    }
+
+    #credits:active + .credits-text {
+        opacity: 1;
+    }
+
     .chevron {
         position: relative;
         display: inline;
