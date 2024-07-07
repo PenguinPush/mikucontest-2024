@@ -461,6 +461,7 @@ class ThreeManager {
         this.initScene();
         this.initCamera();
         this.initControls();
+        this.initNotebook();
         this.initLyrics();
         this.initPostProcessing();
     }
@@ -659,6 +660,26 @@ class ThreeManager {
         this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
+    initNotebook(){
+        console.log("Notebook is being initialized!");
+        this.notebookText = new Text();
+        this.scene.add(this.notebookText)
+        this.notebookText.fontSize = baseTextSize / 4;
+        this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+
+        this.notebookText.textAlign = "center"
+        this.notebookText.anchorX = "50%";
+        this.notebookText.anchorY = "50%";
+        this.notebookText.outlineOffsetX = "8%";
+        this.notebookText.outlineOffsetY = "6%";
+        this.notebookText.outlineColor = (0, 0, 0);
+        this.notebookText.sdfGlyphSize = 128;
+
+        this.notebookText.position.set(5, 1, -1.5);
+        this.notebookText.rotation.x = -Math.PI/2;
+        this.notebookText.text = "JDSLKFJDS";
+    }
+
     initPostProcessing() {
         this.composer = new EffectComposer(this.renderer);
 
@@ -726,11 +747,18 @@ class ThreeManager {
         }
     }
 
+    updateNotebook(){
+        // let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
+        //     return a._data.startTime > b._data.startTime;
+        // });
+    }
+
     update(pos) {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
         this.updateFloatingChars();
+        this.updateNotebook();
 
         // update lyrics
         this.lyrics.text = lyricsData.word;
