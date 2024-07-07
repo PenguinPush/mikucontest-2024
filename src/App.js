@@ -27,7 +27,10 @@ import {
     BEDROOM,
     FULL_VIEW,
     MAX_CHARS_PER_LINE,
-    MAX_LINES
+    MAX_LINES,
+    WINDOW_TEXT_SIZE,
+    NOTEBOOK_TEXT_SIZE,
+    NOTEBOOK
 } from "./constants";
 
 // lyrics information
@@ -687,7 +690,7 @@ class ThreeManager {
         console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
-        this.notebookText.fontSize = baseTextSize / 12;
+        this.notebookText.fontSize = NOTEBOOK_TEXT_SIZE;
         this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
         this.notebookText.outlineOffsetX = "8%";
@@ -734,7 +737,7 @@ class ThreeManager {
                 let charObject = new Text();
                 this.scene.add(charObject);
 
-                charObject.fontSize = baseTextSize / 3;
+                charObject.fontSize = WINDOW_TEXT_SIZE;
                 charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
                 charObject.textAlign = "center"

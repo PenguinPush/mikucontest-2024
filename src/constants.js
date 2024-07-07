@@ -57,6 +57,10 @@ export const TV = 2;
 export const FULL_VIEW = 3;
 export const NOTEBOOK = 4;
 
+export const WINDOW_TEXT_SIZE = baseTextSize / 3;
+
 // Notebook Settings
 export const MAX_CHARS_PER_LINE = 11;
 export const MAX_LINES = 9;
+export const NOTEBOOK_TEXT_SIZE = baseTextSize / 12;
+
