@@ -1,7 +1,7 @@
 // constants
 export const maxTextScale = 1.1;
 export const minTextScale = 0.9;
-export const baseTextSize = 0.8;
+export const baseTextSize = 0.6;
 export const baseFov = 60;
 export const minFov = 60;
 export const maxFov = 90;
@@ -33,7 +33,7 @@ export const cameraPositions = [
     },
 
     { // Full view
-        pos: [1, 1.2, -2.2],
+        pos: [1, 1.1, -2.2],
         rot: [3.9 * Math.PI / 3, Math.PI/2],
         text: [3, 1.2, 1]
     },

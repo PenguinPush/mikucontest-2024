@@ -93,13 +93,17 @@ let lyricsData = new LyricsData();
 let position = 0;
 
 // initialize html elements
-const playBtns = document.querySelectorAll(".play");
+const playBtn = document.querySelector("#play");
 const pauseBtn = document.querySelector("#pause");
 const volumeSlider = document.querySelector("#volume");
 const progressBar = document.querySelector("#progress");
 const songSelector = document.querySelector("#song");
+const settings = document.querySelector("#settings");
+const settingsToggle = document.querySelector("#settings-toggle");
 const customSong = document.querySelector("#custom-song");
 const accessibility = document.querySelector("#accessibility");
+const graphics = document.querySelector("#graphics");
+const language = document.querySelector("#language");
 const leftArrow = document.querySelector(".left");
 const rightArrow = document.querySelector(".right");
 
@@ -141,26 +145,38 @@ function onAppReady(app) {
         document.querySelector("#control").style.display = "block";
 
         // set up controls
-        playBtns.forEach((playBtn) => playBtn.addEventListener("click", () => {
-            player.video && player.requestPlay();
-        }));
+        playBtn.addEventListener("click", () => player.video && player.requestPlay());
 
         pauseBtn.addEventListener("click", () => player.video && player.requestPause());
 
         volumeSlider.addEventListener("input", () => {
             player.volume = volumeSlider.value;
-            volumeSlider.style.background = `linear-gradient(90deg, #78f0d7 ${volumeSlider.value}%, #d3d3d3 ${volumeSlider.value}%)`;
+            volumeSlider.style.background = `linear-gradient(90deg, #78f0d7 ${volumeSlider.value}%, #a9a9a9 ${volumeSlider.value}%)`;
         });
 
         progressBar.addEventListener("input", () => player.requestMediaSeek(progressBar.value * player.video.duration));
 
         songSelector.addEventListener("change", () => {
             if (songSelector.value >= 0) { // non-custom song
-                customSong.style.display = "none";
                 loadSong(songSelector.value, false);
             } else { // custom song
-                customSong.style.display = "inline";
                 loadSong(customSong.value, true);
+            }
+        });
+
+        settingsToggle.addEventListener("change", () => {
+            if (settingsToggle.checked) {
+                settings.classList.add('show');
+
+                setTimeout(() => {
+                    settings.style.pointerEvents = "auto";
+                }, 100); // wait for the slide animation to finish playing
+            } else {
+                settings.classList.remove('show');
+
+                setTimeout(() => {
+                    settings.style.pointerEvents = "none";
+                }, 100); // wait for the slide animation to finish playing
             }
         });
 
@@ -174,11 +190,23 @@ function onAppReady(app) {
                     threeMng.movementStrength = 0;
                     threeMng.rotateStrength = 1 / 24;
                     threeMng.cameraControls.smoothTime = 0.1;
+                    threeMng.skySpeed = 0.1;
                 } else {
                     threeMng.movementStrength = 1 / 10;
                     threeMng.rotateStrength = 1 / 12;
                     threeMng.cameraControls.smoothTime = 0.25;
+                    threeMng.skySpeed = 1;
                 }
+            }
+        });
+
+        language.addEventListener("change", () => {
+            if (language.checked) {
+                document.querySelector("label[for='graphics']").textContent = "グラフィックが低い";
+                document.querySelector("label[for='accessibility']").textContent = "動きを減らす";
+            } else {
+                document.querySelector("label[for='graphics']").textContent = "Low Graphics";
+                document.querySelector("label[for='accessibility']").textContent = "Reduce Motion";
             }
         });
     }
@@ -186,10 +214,8 @@ function onAppReady(app) {
     if (!app.songUrl) {
         console.log("first load")
         if (songSelector.value >= 0) { // non-custom song
-            customSong.style.display = "none";
             loadSong(songSelector.value, false);
         } else { // custom song
-            customSong.style.display = "inline";
             loadSong(customSong.value, true);
         }
     }
@@ -217,7 +243,7 @@ function onVideoReady(v) {
 function onTimerReady(t) {
     if (!player.app.managed) {
         document
-            .querySelectorAll("#control *")
+            .querySelectorAll(".textalive-control")
             .forEach((item) => (item.disabled = false));
     }
 
@@ -261,17 +287,17 @@ function onTimeUpdate(pos) {
 }
 
 function onPlay() {
-    playBtns.forEach((playBtn) => playBtn.style.display = "none");
+    playBtn.style.display = "none"
     pauseBtn.style.display = "inline" // toggle button to pause
 }
 
 function onPause() {
-    playBtns.forEach((playBtn) => playBtn.style.display = "inline");
+    playBtn.style.display = "inline"
     pauseBtn.style.display = "none" // toggle button to play
 }
 
 function onStop() {
-    playBtns.forEach((playBtn) => playBtn.style.display = "inline");
+    playBtn.style.display = "inline"
     pauseBtn.style.display = "none" // toggle button to play
 }
 
@@ -293,10 +319,8 @@ function loadSong(value, isCustom) {
     progressBar.style.background = "repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%)";
     progressBar.value = 0;
     document
-        .querySelectorAll("#control *")
+        .querySelectorAll(".textalive-control")
         .forEach((item) => (item.disabled = true));
-    accessibility.disabled = false;
-    volumeSlider.disabled = false;
 
     if (!isCustom) {
         player.createFromSongUrl(songList[value][0], { // fetch from constants
@@ -308,11 +332,13 @@ function loadSong(value, isCustom) {
                 lyricDiffId: songList[value][5]
             }
         }).then(() => {
+            customSong.disabled = true;
             lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
             lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
         });
     } else { // fetch from songle
         if (checkUrl(value)) {
+            customSong.disabled = false;
             player.createFromSongUrl(value).then(() => {
                 lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
                 lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
@@ -321,7 +347,7 @@ function loadSong(value, isCustom) {
             lyricsData.text = "invalid url";
 
             document
-                .querySelectorAll("#control *")
+                .querySelectorAll(".textalive-control")
                 .forEach((item) => (item.disabled = false));
         }
     }
@@ -409,6 +435,7 @@ class ThreeManager {
         this.cameraPosIndex = 0;
         this.movementStrength = 1 / 10;
         this.rotateStrength = 1 / 12;
+        this.skySpeed = 1;
 
         this.innerSky = null;
         this.coloredSky = null;
@@ -522,7 +549,7 @@ class ThreeManager {
         })
 
         const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
-        light.position.set(3.03, 2.078, 0.05);
+        light.position.set(2.93, 2.08, 0);
         light.castShadow = true;
 
         this.moodLight = new THREE.RectAreaLight(0xffffff, 0.5, 5, 3);
@@ -660,7 +687,7 @@ class ThreeManager {
                 let charObject = new Text();
                 this.scene.add(charObject);
 
-                charObject.fontSize = baseTextSize / 4;
+                charObject.fontSize = baseTextSize / 3;
                 charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
                 charObject.textAlign = "center"
@@ -714,12 +741,12 @@ class ThreeManager {
         this.moodLight.color = lyricsData.moodColor;
         this.lyrics.outlineColor = lyricsData.moodColor;
 
-        this.innerSky.rotation.y = -1 / 6000 * pos;
+        this.innerSky.rotation.y = -1 / 6000 * pos * this.skySpeed;
 
         this.coloredSky.material.color = new THREE.Color().addColors(lyricsData.moodColor, new THREE.Color(0.2, 0.2, 0.2));
-        this.coloredSky.rotation.y = 1 / 6000 * pos;
+        this.coloredSky.rotation.y = 1 / 6000 * pos * this.skySpeed;
 
-        this.outerSky.rotation.y = -1 / 8000 * pos;
+        this.outerSky.rotation.y = -1 / 8000 * pos * this.skySpeed;
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;

@@ -18,18 +18,36 @@
 </div>
 <div id="footer">
     <div id="control" style="display: none;">
-        <div id="main-controls">
-            <button class="play" disabled style="display: inline;">
-                <img src="src/assets/buttons/button_play.png" alt="play" class="icon">
-            </button>
-            <button id="pause" disabled style="display: none;">
-                <img src="src/assets/buttons/button_pause.png" alt="pause" class="icon">
-            </button>
-            <input type="range" id="progress" value="0" max="1" step="0.0001" disabled style="flex-grow: 1;">
+        <div id="settings" style="visibility: show">
+            <input type="text" id="custom-song" disabled class="textalive-control" placeholder="Custom Song URL">
+            <div class="checkbox-container">
+                <input type="checkbox" id="graphics">
+                <label for="graphics">Low Graphics</label>
+            </div>
+            <div class="checkbox-container">
+                <input type="checkbox" id="accessibility">
+                <label for="accessibility">Reduce Motion</label>
+            </div>
+            <div class="toggle-checkbox">
+                <input type="checkbox" id="language">
+                <label for="language"></label>
+            </div>
         </div>
 
-        <div id="settings">
-            <select name="song" id="song" disabled>
+        <div id="main-controls">
+            <button id="play" disabled style="display: inline;" class="textalive-control">
+                <img src="src/assets/buttons/button_play.png" alt="play">
+            </button>
+            <button id="pause" disabled style="display: none;" class="textalive-control">
+                <img src="src/assets/buttons/button_pause.png" alt="pause">
+            </button>
+            <input type="range" id="progress" value="0" max="1" step="0.0001" disabled style="flex-grow: 1;"
+                   class="textalive-control">
+        </div>
+
+        <div id="secondary-controls">
+            <input type="range" id="volume" min="0" max="100" value="50">
+            <select name="song" id="song" disabled class="textalive-control">
                 <option value="0">SUPERHERO / めろくる</option>
                 <option value="1" selected>いつか君と話したミライは / タケノコ少年</option>
                 <option value="2">フューチャーノーツ / shikisai</option>
@@ -38,11 +56,11 @@
                 <option value="5">The Marks / 2ouDNS</option>
                 <option value="-1">Custom / カスタム</option>
             </select>
-            <input type="text" id="custom-song" style="display: none;"
-                   value="https://www.youtube.com/watch?v=KdNHFKTKX2s" disabled>
-            <input type="range" id="volume" min="0" max="100" value="50" disabled>
-            <input type="checkbox" id="accessibility" value="false">
-            <label for="accessibility">reduce motion</label><br>
+            <div class="toggle-checkbox">
+                <input type="checkbox" id="settings-toggle">
+                <label for="settings-toggle"></label>
+            </div>
+            <div id="settings-box"></div>
         </div>
     </div>
 </div>
