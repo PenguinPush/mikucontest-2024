@@ -771,9 +771,25 @@ class ThreeManager {
     }
 
     updateNotebook(){
-        let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
+        let rawCharList = Array.from(lyricsData.previousUnits).sort(function(a, b){
             return a._data.startTime > b._data.startTime;
         });
+
+        // Add spaces
+        let sortedCharsList = [];
+        for (let i=0; i<rawCharList.length; i++){
+            sortedCharsList.push(rawCharList[i]);
+            if (rawCharList[i].parent.parent.lastChar === rawCharList[i]){
+                sortedCharsList.push({
+                    _data: {
+                        startTime: rawCharList[i]._data.startTime,
+                    },
+                    text: "　"
+                }
+                　);
+            }
+        }
+
 
         // Find the last character to be rendered
         let lastChar = sortedCharsList.length - 1;
@@ -790,16 +806,9 @@ class ThreeManager {
 
         let startPos = Math.max(0, Math.floor(lastChar / (MAX_CHARS_PER_LINE * MAX_LINES)) * MAX_CHARS_PER_LINE * MAX_LINES)
         for (let i=startPos; i<=lastChar; i++){
-            newText.push(sortedCharsList[i]);
+            newText.push(sortedCharsList[i].text);
             if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
                 newText.push("\n");
-            }
-            else if (sortedCharsList[i].parent.parent.lastChar === sortedCharsList[i]){
-                newText.push("　");
-                cnt += 1;
-                if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
-                    newText.push("\n");
-                }
             }
             cnt += 1;
         }
