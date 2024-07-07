@@ -780,13 +780,7 @@ class ThreeManager {
         for (let i=0; i<rawCharList.length; i++){
             sortedCharsList.push(rawCharList[i]);
             if (rawCharList[i].parent.parent.lastChar === rawCharList[i]){
-                sortedCharsList.push({
-                    _data: {
-                        startTime: rawCharList[i]._data.startTime,
-                    },
-                    text: "　"
-                }
-                　);
+                sortedCharsList.push("　");
             }
         }
 
@@ -795,8 +789,11 @@ class ThreeManager {
         let lastChar = sortedCharsList.length - 1;
         for (let i=0; i<sortedCharsList.length; i++){
 
-            if (sortedCharsList[i]._data.startTime > player.videoPosition){
+            if (sortedCharsList[i] != "　" && sortedCharsList[i]._data.startTime > player.videoPosition){
                 lastChar = i - 1;
+                while (sortedCharsList[lastChar] == "　") {
+                    lastChar -= 1;
+                }
                 break;
             }
         }
