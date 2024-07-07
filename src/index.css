@@ -35,7 +35,7 @@ body {
 
 #header {
     position: absolute;
-    left: 0;
+    right: 0;
     top: 0;
 }
 
@@ -110,7 +110,6 @@ body {
     outline: 4px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     position: relative;
-    width: 100%;
 }
 
 #progress::-webkit-slider-runnable-track {
@@ -282,12 +281,12 @@ body {
     content: "";
     position: absolute;
     left: -21px;
-    top: 4px;
+    top: calc(-1px + 50%);
     width: 4px;
     height: 10px;
     border: solid white;
     border-width: 0 3px 3px 0;
-    transform: rotate(45deg);
+    transform: translateY(-50%) rotate(45deg);
     opacity: 0;
     outline: 0 solid #78f0d7;
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
@@ -400,7 +399,6 @@ body {
     width: 36px;
 }
 
-
 #language + label {
     background-image: url("assets/buttons/flag_en.png");
     background-color: #ffffff;
@@ -414,6 +412,37 @@ body {
 #language:checked + label {
     background-image: url("assets/buttons/flag_jp.png");
     background-color: #444461;
+}
+
+#credits {
+    position: relative;
+    top: 1em;
+    right: 1em;
+    display: inline-block;
+    border-bottom: 2px dotted #d3d3d3;
+}
+
+.credits-text {
+    width: 500px;
+    background-color: #a9a9a9;
+    color: #fff;
+    text-align: center;
+    top: 3em;
+    right: 1em;
+    padding: 8px 0;
+    border-radius: 5px;
+
+    position: absolute;
+    z-index: 1;
+
+    opacity: 0;
+    transition: transform 0.1s ease-in, opacity 0.1s ease-in;
+
+    pointer-events: none;
+}
+
+#credits:hover + .credits-text {
+    opacity: 1;
 }
 
 /* PC hover interactions & styling */
@@ -508,7 +537,7 @@ body {
 
     .checkbox-container label:hover::after {
         outline-width: 4px;
-        transform: translateY(-4px) rotate(45deg);
+        transform: translateY(calc(-4px - 50%)) rotate(45deg);
     }
 
     #settings-toggle + label:hover {
@@ -563,6 +592,10 @@ body {
         font-size: 0.5em;
     }
 
+    #song {
+        width: 75%;
+    }
+
     #main-controls > button:active {
         outline-width: 4px;
         transform: translateY(-6px);
@@ -600,7 +633,7 @@ body {
 
     .checkbox-container label:active::after {
         outline-width: 4px;
-        transform: translateY(-4px) rotate(45deg);
+        transform: translateY(calc(-4px - 50%)) rotate(45deg);
     }
 
     #settings-toggle + label:active {

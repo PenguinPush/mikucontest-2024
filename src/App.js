@@ -104,6 +104,7 @@ const customSong = document.querySelector("#custom-song");
 const accessibility = document.querySelector("#accessibility");
 const graphics = document.querySelector("#graphics");
 const language = document.querySelector("#language");
+const credits = document.querySelector("#credits");
 const leftArrow = document.querySelectorAll(".left");
 const rightArrow = document.querySelectorAll(".right");
 
@@ -160,6 +161,13 @@ function onAppReady(app) {
             if (songSelector.value >= 0) { // non-custom song
                 loadSong(songSelector.value, false);
             } else { // custom song
+                // bring up settings
+                settingsToggle.checked = true;
+                settings.classList.add('show');
+                setTimeout(() => {
+                    settings.style.pointerEvents = "auto";
+                }, 100); // wait for the slide animation to finish playing
+
                 loadSong(customSong.value, true);
             }
         });
@@ -202,11 +210,13 @@ function onAppReady(app) {
 
         language.addEventListener("change", () => {
             if (language.checked) {
-                document.querySelector("label[for='graphics']").textContent = "グラフィックが低い";
+                document.querySelector("label[for='graphics']").textContent = "低グラフィックス";
                 document.querySelector("label[for='accessibility']").textContent = "動きを減らす";
+                credits.textContent = "制作";
             } else {
                 document.querySelector("label[for='graphics']").textContent = "Low Graphics";
                 document.querySelector("label[for='accessibility']").textContent = "Reduce Motion";
+                credits.textContent = "Credits";
             }
         });
     }
@@ -312,12 +322,9 @@ function loadSong(value, isCustom) {
 
     // initialize lyrics data
     lyricsData = new LyricsData()
-    lyricsData.textOverride = true;
-    lyricsData.text = "loading...";
 
     // reset ui
     progressBar.style.background = "repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%)";
-    progressBar.value = 0;
     document
         .querySelectorAll(".textalive-control")
         .forEach((item) => (item.disabled = true));
@@ -335,13 +342,17 @@ function loadSong(value, isCustom) {
             customSong.disabled = true;
             lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
             lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
+            player.requestMediaSeek(0);
+            player.endVideoSeek();
         });
-    } else { // fetch from songle
+    } else { // fetch from piapro
         if (checkUrl(value)) {
             customSong.disabled = false;
             player.createFromSongUrl(value).then(() => {
                 lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
                 lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
+                player.requestMediaSeek(0);
+                player.endVideoSeek();
             });
         } else {
             lyricsData.text = "invalid url";
@@ -360,7 +371,7 @@ function animateChar(pos, unit) {
             randomNum = 0.5 - Math.random();
         }
         lyricsData.previousRandom = randomNum;
-        lyricsData.language = player.video.findWord(unit.startTime + 1).language;
+        lyricsData.language = unit.parent.language;
 
         if (lyricsData.language === "en") {
             // place the text closer if it's english

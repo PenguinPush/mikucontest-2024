@@ -10,8 +10,18 @@
 </head>
 <body>
 <div id="view"></div>
-<div id="media"></div>
-<div id="header"></div>
+<div id="media" style="display: none;"></div>
+<div id="header">
+    <div id="credits-container">
+        <div id="credits">制作</div>
+        <span class="credits-text">
+            Andrew Dai - Coding, Modelling, Animation<br>
+            Andrew Tan - Coding, Animation<br>
+            Andrew Zhang - Modelling, Texturing<br><br>
+            "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
+        </span>
+    </div>
+</div>
 <div id="arrow-container-pc">
     <div class="chevron left pc"></div>
     <div class="chevron right pc"></div>
@@ -23,10 +33,11 @@
             <div class="chevron right mobile"></div>
         </div>
         <div id="settings" style="visibility: show; pointer-events: none;">
-            <input type="text" id="custom-song" disabled class="textalive-control" placeholder="Custom Song URL">
+            <input type="text" value="https://www.youtube.com/watch?v=KdNHFKTKX2s" id="custom-song" disabled
+                   class="textalive-control" placeholder="Custom Song URL">
             <div class="checkbox-container">
                 <input type="checkbox" id="graphics">
-                <label for="graphics">グラフィックが低い</label>
+                <label for="graphics">低グラフィックス</label>
             </div>
             <div class="checkbox-container">
                 <input type="checkbox" id="accessibility">
@@ -51,7 +62,7 @@
         </div>
 
         <div id="secondary-controls">
-            <input type="range" id="volume" min="0" max="100" value="50">
+            <input type="range" id="volume" min="0" max="100" value="50" class="pc">
             <select name="song" id="song" disabled class="textalive-control">
                 <option value="0">SUPERHERO / めろくる</option>
                 <option value="1" selected>いつか君と話したミライは / タケノコ少年</option>
