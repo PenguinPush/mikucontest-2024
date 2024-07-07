@@ -26,6 +26,8 @@ import {
     cameraPositions,
     BEDROOM,
     FULL_VIEW,
+    MAX_CHARS_PER_LINE,
+    MAX_LINES
 } from "./constants";
 
 // lyrics information
@@ -685,7 +687,7 @@ class ThreeManager {
         console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
-        this.notebookText.fontSize = baseTextSize / 8;
+        this.notebookText.fontSize = baseTextSize / 12;
         this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
         this.notebookText.outlineOffsetX = "8%";
@@ -693,9 +695,9 @@ class ThreeManager {
         this.notebookText.outlineColor = (0, 0, 0);
         this.notebookText.sdfGlyphSize = 128;
 
-        this.notebookText.position.set(4.7, 0.9, -1.7);
+        this.notebookText.position.set(1.65, 0.35, 0.25);
         this.notebookText.rotation.x = -Math.PI/2;
-        this.notebookText.text = "JDSLKFJDSJDSLKFJDSJDSLKFJDSJDSLKFJDSJDSLKFJDS";
+        this.notebookText.rotation.z = 16*Math.PI/31;
     }
 
     initPostProcessing() {
@@ -766,10 +768,6 @@ class ThreeManager {
     }
 
     updateNotebook(){
-        // Todo: Move to constants
-        let MAX_CHARS_PER_LINE = 5;
-        let MAX_LINES = 5;
-
         let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
             return a._data.startTime > b._data.startTime;
         });
@@ -777,6 +775,7 @@ class ThreeManager {
         // Find the last character to be rendered
         let lastChar = sortedCharsList.length - 1;
         for (let i=0; i<sortedCharsList.length; i++){
+
             if (sortedCharsList[i]._data.startTime > player.videoPosition){
                 lastChar = i - 1;
                 break;
@@ -791,6 +790,13 @@ class ThreeManager {
             newText.push(sortedCharsList[i]);
             if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
                 newText.push("\n");
+            }
+            else if (sortedCharsList[i].parent.parent.lastChar === sortedCharsList[i]){
+                newText.push("　");
+                cnt += 1;
+                if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
+                    newText.push("\n");
+                }
             }
             cnt += 1;
         }

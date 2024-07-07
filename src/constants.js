@@ -32,6 +32,12 @@ export const cameraPositions = [
         text: [1, 1.07, 0]
     },
 
+    { // Coffee Table
+        pos: [2.2, 1.07, -0.1],
+        rot: [Math.PI / 2, Math.PI/6],
+        text: [1, 1.07, 0]
+    },
+
     { // Full view
         pos: [1, 1.1, -2.2],
         rot: [3.9 * Math.PI / 3, Math.PI/2],
@@ -50,3 +56,7 @@ export const WINDOW = 1;
 export const TV = 2;
 export const FULL_VIEW = 3;
 export const NOTEBOOK = 4;
+
+// Notebook Settings
+export const MAX_CHARS_PER_LINE = 11;
+export const MAX_LINES = 9;
