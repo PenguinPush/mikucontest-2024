@@ -28,7 +28,12 @@ import {
     WINDOW,
     FULL_VIEW,
     TV,
+	NOTEBOOK,
     noShadows
+    MAX_CHARS_PER_LINE,
+    MAX_LINES,
+    WINDOW_TEXT_SIZE,
+    NOTEBOOK_TEXT_SIZE,
 } from "./constants";
 
 // lyrics information
@@ -726,20 +731,17 @@ class ThreeManager {
         console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
-        this.notebookText.fontSize = baseTextSize / 4;
+        this.notebookText.fontSize = NOTEBOOK_TEXT_SIZE;
         this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
-        this.notebookText.textAlign = "center"
-        this.notebookText.anchorX = "50%";
-        this.notebookText.anchorY = "50%";
         this.notebookText.outlineOffsetX = "8%";
         this.notebookText.outlineOffsetY = "6%";
         this.notebookText.outlineColor = (0, 0, 0);
         this.notebookText.sdfGlyphSize = 128;
 
-        this.notebookText.position.set(5, 1, -1.5);
-        this.notebookText.rotation.x = -Math.PI / 2;
-        this.notebookText.text = "JDSLKFJDS";
+        this.notebookText.position.set(1.65, 0.35, 0.25);
+        this.notebookText.rotation.x = -Math.PI/2;
+        this.notebookText.rotation.z = 16*Math.PI/31;
     }
 
     initPostProcessing() {
@@ -776,7 +778,7 @@ class ThreeManager {
                 let charObject = new Text();
                 this.scene.add(charObject);
 
-                charObject.fontSize = baseTextSize / 3;
+                charObject.fontSize = WINDOW_TEXT_SIZE;
                 charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
                 charObject.textAlign = "center"
@@ -821,10 +823,52 @@ class ThreeManager {
         }
     }
 
-    updateNotebook() {
-        // let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
-        //     return a._data.startTime > b._data.startTime;
-        // });
+    updateNotebook(){
+        let rawCharList = Array.from(lyricsData.previousUnits).sort(function(a, b){
+            return a._data.startTime > b._data.startTime;
+        });
+
+        // Add spaces
+        let sortedCharsList = [];
+        for (let i=0; i<rawCharList.length; i++){
+            sortedCharsList.push(rawCharList[i]);
+            if (rawCharList[i].parent.parent.lastChar === rawCharList[i]){
+                sortedCharsList.push({
+                    _data: {
+                        startTime: rawCharList[i]._data.startTime,
+                    },
+                    text: "　"
+                }
+                　);
+            }
+        }
+
+
+        // Find the last character to be rendered
+        let lastChar = sortedCharsList.length - 1;
+        for (let i=0; i<sortedCharsList.length; i++){
+
+            if (sortedCharsList[i]._data.startTime > player.videoPosition){
+                lastChar = i - 1;
+                break;
+            }
+        }
+
+        let newText = [];
+        let cnt = 0;
+
+        let startPos = Math.max(0, Math.floor(lastChar / (MAX_CHARS_PER_LINE * MAX_LINES)) * MAX_CHARS_PER_LINE * MAX_LINES)
+        for (let i=startPos; i<=lastChar; i++){
+            newText.push(sortedCharsList[i].text);
+            if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
+                newText.push("\n");
+            }
+            cnt += 1;
+        }
+
+        let text = newText.join("")
+        this.notebookText.text = text;
+        this.notebookText.sync();
     }
 
     update(pos) {

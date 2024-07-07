@@ -32,6 +32,12 @@ export const cameraPositions = [
         text: [2.71, -10, -0.04]
     },
 
+    { // Coffee Table
+        pos: [2.2, 1.07, -0.1],
+        rot: [Math.PI / 2, Math.PI/6],
+        text: [1, 1.07, 0]
+    },
+
     { // Full view
         pos: [0.6, 1.1, -1.2],
         rot: [-1.9 * Math.PI / 3, Math.PI/2],
@@ -52,3 +58,8 @@ export const FULL_VIEW = 3;
 export const NOTEBOOK = 4;
 
 export const noShadows = ["polaroidline", "line", "MikuAcrylic"]
+export const WINDOW_TEXT_SIZE = baseTextSize / 3;
+
+export const MAX_CHARS_PER_LINE = 11;
+export const MAX_LINES = 9;
+export const NOTEBOOK_TEXT_SIZE = baseTextSize / 12;
