@@ -664,20 +664,17 @@ class ThreeManager {
         console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
-        this.notebookText.fontSize = baseTextSize / 4;
+        this.notebookText.fontSize = baseTextSize / 8;
         this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
-        this.notebookText.textAlign = "center"
-        this.notebookText.anchorX = "50%";
-        this.notebookText.anchorY = "50%";
         this.notebookText.outlineOffsetX = "8%";
         this.notebookText.outlineOffsetY = "6%";
         this.notebookText.outlineColor = (0, 0, 0);
         this.notebookText.sdfGlyphSize = 128;
 
-        this.notebookText.position.set(5, 1, -1.5);
+        this.notebookText.position.set(4.7, 0.9, -1.7);
         this.notebookText.rotation.x = -Math.PI/2;
-        this.notebookText.text = "JDSLKFJDS";
+        this.notebookText.text = "JDSLKFJDSJDSLKFJDSJDSLKFJDSJDSLKFJDSJDSLKFJDS";
     }
 
     initPostProcessing() {
@@ -748,9 +745,38 @@ class ThreeManager {
     }
 
     updateNotebook(){
-        // let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
-        //     return a._data.startTime > b._data.startTime;
-        // });
+        // Todo: Move to constants
+        let MAX_CHARS_PER_LINE = 5;
+        let MAX_LINES = 5;
+
+        let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
+            return a._data.startTime > b._data.startTime;
+        });
+
+        // Find the last character to be rendered
+        let lastChar = sortedCharsList.length - 1;
+        for (let i=0; i<sortedCharsList.length; i++){
+            if (sortedCharsList[i]._data.startTime > player.videoPosition){
+                lastChar = i - 1;
+                break;
+            }
+        }
+
+        let newText = [];
+        let cnt = 0;
+
+        let startPos = Math.max(0, Math.floor(lastChar / (MAX_CHARS_PER_LINE * MAX_LINES)) * MAX_CHARS_PER_LINE * MAX_LINES)
+        for (let i=startPos; i<=lastChar; i++){
+            newText.push(sortedCharsList[i]);
+            if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
+                newText.push("\n");
+            }
+            cnt += 1;
+        }
+
+        let text = newText.join("")
+        this.notebookText.text = text;
+        this.notebookText.sync();
     }
 
     update(pos) {
