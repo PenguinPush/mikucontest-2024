@@ -208,6 +208,26 @@ function onAppReady(app) {
             }
         });
 
+        graphics.addEventListener("change", () => {
+            if (graphics.checked) {
+                threeMng.renderer.shadowMap.enabled = false;
+                threeMng.scene.traverse(function (node) {
+                    if (node instanceof THREE.Mesh) {
+                        node.castShadow = false;
+                        node.receiveShadow = false;
+                    }
+                });
+            } else {
+                threeMng.renderer.shadowMap.enabled = true;
+                threeMng.scene.traverse(function (node) {
+                    if (node instanceof THREE.Mesh) {
+                        node.castShadow = true;
+                        node.receiveShadow = true;
+                    }
+                });
+            }
+        });
+
         language.addEventListener("change", () => {
             if (language.checked) {
                 document.querySelector("label[for='graphics']").textContent = "低グラフィックス";
@@ -455,8 +475,7 @@ class ThreeManager {
         rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
 
         this.renderer.shadowMap.enabled = true;
-        this.renderer.autoClear = false;
-        // renderer.shadowMap.autoUpdate = false;
+        this.renderer.shadowMap.autoUpdate = false;
 
         this.initScene();
         this.initCamera();
@@ -464,6 +483,8 @@ class ThreeManager {
         this.initNotebook();
         this.initLyrics();
         this.initPostProcessing();
+
+        this.renderer.shadowMap.needsUpdate = true;
     }
 
     goLeft() {
