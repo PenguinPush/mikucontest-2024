@@ -13,7 +13,7 @@ body {
     overflow-y: hidden !important;
 }
 
-#media, #header, #footer, #control, #view, #arrow-container {
+#media, #header, #footer, #control, #view, #arrow-container-pc, #arrow-container-mobile {
     pointer-events: auto;
 }
 
@@ -48,6 +48,7 @@ body {
     flex-direction: column;
     align-items: center;
     margin: 0 0 10px 0;
+    width: 50vw;
 }
 
 #control {
@@ -57,7 +58,7 @@ body {
     gap: 8px;
     background: rgba(255, 255, 255, 0.2);
     padding: 8px;
-    width: 150%;
+    width: 100%;
 }
 
 #main-controls {
@@ -145,16 +146,6 @@ body {
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
-#progress:enabled::-webkit-slider-thumb:hover {
-    outline-width: 4px;
-    transform: translateY(-4px);
-}
-
-#progress:enabled::-moz-range-thumb:hover {
-    outline-width: 4px;
-    transform: translateY(-4px);
-}
-
 #progress:disabled::-webkit-slider-thumb {
     background: #d3d3d3;
 }
@@ -214,16 +205,6 @@ body {
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
-#volume:enabled::-webkit-slider-thumb:hover {
-    outline-width: 4px;
-    transform: translateY(-4px);
-}
-
-#volume:enabled::-moz-range-thumb:hover {
-    outline-width: 4px;
-    transform: translateY(-4px);
-}
-
 #volume:disabled::-webkit-slider-thumb {
     background-color: #d3d3d3;
 }
@@ -250,16 +231,12 @@ body {
     border: none;
     padding: 10px 20px 10px 40px;
     height: 36px;
+    width: 50%;
     border-radius: 20px;
     -webkit-appearance: none;
     -moz-appearance: none;
     outline: 0 solid #78f0d7;
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
-}
-
-#song:hover:enabled {
-    outline-width: 4px;
-    transform: translateY(-6px);
 }
 
 #song:disabled {
@@ -270,14 +247,6 @@ body {
     margin: 10px;
     padding: 5px;
     background: rgba(255, 255, 255, 0.2);
-}
-
-#arrow-container {
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
 }
 
 .checkbox-container {
@@ -299,12 +268,13 @@ body {
     content: "";
     position: absolute;
     left: -30px;
-    top: 0;
+    top: 50%;
     width: 20px;
     height: 20px;
     border: 2px solid #ffffff;
     border-radius: 6px;
     outline: 0 solid #78f0d7;
+    transform: translateY(-50%);
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
 }
 
@@ -341,57 +311,6 @@ body {
     border: 2px solid #78f0d7;
 }
 
-.checkbox-container label:hover::before {
-    outline-width: 4px;
-    transform: translateY(-4px);
-}
-
-.checkbox-container label:hover::after {
-    outline-width: 4px;
-    transform: translateY(-4px) rotate(45deg);
-}
-
-.left {
-    transform: rotate(90deg);
-}
-
-.right {
-    transform: rotate(-90deg);
-}
-
-.chevron {
-    position: relative;
-    text-align: center;
-    padding: 0px 36px;
-    margin-bottom: 6px;
-    height: 10px;
-    width: 20px;
-    opacity: 50%;
-}
-
-.chevron:before, .chevron:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 50%;
-    background: whitesmoke;
-}
-
-.chevron:before {
-    left: 0;
-    transform: skew(0deg, 20deg);
-}
-
-.chevron:after {
-    right: 0;
-    transform: skew(0deg, -20deg);
-}
-
-.chevron:hover {
-    opacity: 80%;
-}
-
 #custom-song {
     background-color: #ffffff;
     background-image: url("assets/buttons/button_url.png");
@@ -401,6 +320,7 @@ body {
     border: none;
     padding: 10px 20px 10px 40px;
     height: 36px;
+    width: 50%;
     border-radius: 6px;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -422,7 +342,7 @@ body {
     left: 50%;
     transform: translateX(-50%) translateY(100%);
     bottom: 100%;
-    width: 120%;
+    width: 85%;
     background: rgba(255, 255, 255, 0.2);
 
     display: flex;
@@ -461,16 +381,6 @@ body {
     background-size: 36px 36px;
 }
 
-#settings-toggle + label:hover {
-    outline-width: 4px;
-    transform: translateY(-6px) rotate(30deg);
-}
-
-#settings-toggle:checked + label:hover {
-    outline-width: 4px;
-    transform: translateY(-6px) rotate(60deg);
-}
-
 #settings-toggle + label {
     background-image: url("assets/buttons/button_settings_off.png");
     background-color: #ffffff;
@@ -486,10 +396,10 @@ body {
     width: 36px;
 }
 
-#language + label:hover {
-    outline-width: 4px;
-    transform: translateY(-6px)
+#language-box {
+    width: 36px;
 }
+
 
 #language + label {
     background-image: url("assets/buttons/flag_en.png");
@@ -497,10 +407,214 @@ body {
 
     position: absolute;
     right: 8px;
-    bottom: 8px;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 #language:checked + label {
     background-image: url("assets/buttons/flag_jp.png");
     background-color: #444461;
+}
+
+/* PC hover interactions & styling */
+@media (hover: hover) and (pointer: fine) {
+    .chevron {
+        position: relative;
+        text-align: center;
+        padding: 0px 36px;
+        margin-bottom: 6px;
+        height: 10px;
+        width: 20px;
+        opacity: 50%;
+    }
+
+    .left {
+        transform: rotate(90deg);
+    }
+
+    .right {
+        transform: rotate(-90deg);
+    }
+
+    .chevron:before, .chevron:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        background: whitesmoke;
+    }
+
+    .chevron:before {
+        left: 0;
+        transform: skew(0deg, 20deg);
+    }
+
+    .chevron:after {
+        right: 0;
+        transform: skew(0deg, -20deg);
+    }
+
+    .chevron:hover {
+        opacity: 80%;
+    }
+
+    .mobile {
+        display: none;
+    }
+
+    #arrow-container-pc {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #main-controls > button:hover:enabled {
+        outline-width: 4px;
+        transform: translateY(-6px);
+    }
+
+    #progress:enabled::-webkit-slider-thumb:hover {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #progress:enabled::-moz-range-thumb:hover {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #volume:enabled::-webkit-slider-thumb:hover {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #volume:enabled::-moz-range-thumb:hover {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #song:hover:enabled {
+        outline-width: 4px;
+        transform: translateY(-6px);
+    }
+
+    .checkbox-container label:hover::before {
+        outline-width: 4px;
+        transform: translateY(calc(-4px - 50%));
+    }
+
+    .checkbox-container label:hover::after {
+        outline-width: 4px;
+        transform: translateY(-4px) rotate(45deg);
+    }
+
+    #settings-toggle + label:hover {
+        outline-width: 4px;
+        transform: translateY(-6px) rotate(30deg);
+    }
+
+    #settings-toggle:checked + label:hover {
+        outline-width: 4px;
+        transform: translateY(-6px) rotate(60deg);
+    }
+
+    #language + label:hover {
+        outline-width: 4px;
+        transform: translateY(calc(-6px - 50%));
+    }
+}
+
+/* mobile hover interactions & styling */
+@media (pointer: none), (pointer: coarse) {
+    .chevron {
+        position: relative;
+        display: inline;
+        text-align: center;
+        margin-bottom: 6px;
+        height: 30px;
+        width: 100%;
+        opacity: 50%;
+        background: whitesmoke;
+    }
+
+    .pc {
+        display: none;
+    }
+
+    #arrow-container-mobile {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    #footer {
+        padding: 0;
+        bottom: 0;
+        width: 90vw;
+    }
+
+    #settings {
+        font-size: 0.5em;
+    }
+
+    #main-controls > button:active {
+        outline-width: 4px;
+        transform: translateY(-6px);
+    }
+
+    #progress:enabled::-webkit-slider-thumb:active {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #progress:enabled::-moz-range-thumb:active {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #volume:enabled::-webkit-slider-thumb:active {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #volume:enabled::-moz-range-thumb:active {
+        outline-width: 4px;
+        transform: translateY(-4px);
+    }
+
+    #song:active {
+        outline-width: 4px;
+        transform: translateY(-6px);
+    }
+
+    .checkbox-container label:active::before {
+        outline-width: 4px;
+        transform: translateY(calc(-4px - 50%));
+    }
+
+    .checkbox-container label:active::after {
+        outline-width: 4px;
+        transform: translateY(-4px) rotate(45deg);
+    }
+
+    #settings-toggle + label:active {
+        outline-width: 4px;
+        transform: translateY(-6px) rotate(30deg);
+    }
+
+    #settings-toggle:checked + label:active {
+        outline-width: 4px;
+        transform: translateY(-6px) rotate(60deg);
+    }
+
+    #language + label:active {
+        outline-width: 4px;
+        transform: translateY(calc(-6px - 50%));
+    }
 }

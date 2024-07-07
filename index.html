@@ -12,13 +12,17 @@
 <div id="view"></div>
 <div id="media"></div>
 <div id="header"></div>
-<div id="arrow-container">
-    <div class="chevron left"></div>
-    <div class="chevron right"></div>
+<div id="arrow-container-pc">
+    <div class="chevron left pc"></div>
+    <div class="chevron right pc"></div>
 </div>
 <div id="footer">
     <div id="control" style="display: none;">
-        <div id="settings" style="visibility: show">
+        <div id="arrow-container-mobile">
+            <div class="chevron left mobile"></div>
+            <div class="chevron right mobile"></div>
+        </div>
+        <div id="settings" style="visibility: show; pointer-events: none;">
             <input type="text" id="custom-song" disabled class="textalive-control" placeholder="Custom Song URL">
             <div class="checkbox-container">
                 <input type="checkbox" id="graphics">
@@ -32,6 +36,7 @@
                 <input type="checkbox" id="language" checked>
                 <label for="language"></label>
             </div>
+            <div id="language-box"></div>
         </div>
 
         <div id="main-controls">

@@ -104,8 +104,8 @@ const customSong = document.querySelector("#custom-song");
 const accessibility = document.querySelector("#accessibility");
 const graphics = document.querySelector("#graphics");
 const language = document.querySelector("#language");
-const leftArrow = document.querySelector(".left");
-const rightArrow = document.querySelector(".right");
+const leftArrow = document.querySelectorAll(".left");
+const rightArrow = document.querySelectorAll(".right");
 
 // initialize main function
 function initMain() {
@@ -353,7 +353,6 @@ function loadSong(value, isCustom) {
     }
 }
 
-
 function animateChar(pos, unit) {
     if (!lyricsData.previousUnits.has(unit)) {
         let randomNum = 0.5 - Math.random();
@@ -441,12 +440,8 @@ class ThreeManager {
         this.coloredSky = null;
         this.outerSky = null;
 
-        leftArrow.addEventListener("click", () => {
-            this.goLeft();
-        });
-        rightArrow.addEventListener("click", () => {
-            this.goRight();
-        });
+        leftArrow.forEach((leftArrow) => leftArrow.addEventListener("click", () => this.goLeft()));
+        rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
 
         this.renderer.shadowMap.enabled = true;
         this.renderer.autoClear = false;
