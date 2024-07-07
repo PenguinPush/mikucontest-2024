@@ -24,24 +24,24 @@ export const cameraPositions = [
     { // Window
         pos: [1.85, 1.2, 0.7],
         rot: [Math.PI, Math.PI / 2],
-        text: [1, 1.07, 0]
+        text: [2.71, -10, -0.04]
     },
     { // TV
         pos: [2.2, 1.07, -0.1],
         rot: [Math.PI / 2, Math.PI / 2],
-        text: [1, 1.07, 0]
+        text: [2.71, -10, -0.04]
     },
 
     { // Full view
-        pos: [1, 1.1, -2.2],
-        rot: [3.9 * Math.PI / 3, Math.PI/2],
-        text: [3, 1.2, 1]
+        pos: [0.6, 1.1, -1.2],
+        rot: [-1.9 * Math.PI / 3, Math.PI/2],
+        text: [3.3, 1.2, 0]
     },
 
-    { // Notebook
-        pos: [5, 1.4, -1.1],
-        rot: [0, Math.PI/6],
-        text: [2.71, 1.3, -0.04]
+    { // table
+        pos: [4.8, 1.2, -1.1],
+        rot: [0, Math.PI/2],
+        text: [2.71, -10, -0.04]
     },
 ]
 
@@ -50,3 +50,5 @@ export const WINDOW = 1;
 export const TV = 2;
 export const FULL_VIEW = 3;
 export const NOTEBOOK = 4;
+
+export const noShadows = ["polaroidline", "line", "MikuAcrylic"]

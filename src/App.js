@@ -25,7 +25,10 @@ import {
     songList,
     cameraPositions,
     BEDROOM,
+    WINDOW,
     FULL_VIEW,
+    TV,
+    noShadows
 } from "./constants";
 
 // lyrics information
@@ -314,6 +317,10 @@ function onTimerReady(t) {
 function onTimeUpdate(pos) {
     progressBar.value = pos / player.video.duration;
     position = pos;
+
+    if (pos < player.video.firstChar.startTime) {
+        lyricsData.word = "";
+    }
 }
 
 function onPlay() {
@@ -471,11 +478,9 @@ class ThreeManager {
         this.coloredSky = null;
         this.outerSky = null;
 
-        leftArrow.forEach((leftArrow) => leftArrow.addEventListener("click", () => this.goLeft()));
-        rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
-
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.autoUpdate = false;
+        this.renderer.shadowMap.type = THREE.VSMShadowMap;
 
         this.initScene();
         this.initCamera();
@@ -525,6 +530,11 @@ class ThreeManager {
                 }
 
                 if (item.material) {
+                    if (noShadows.includes(item.material.name)) {
+                        item.castShadow = false;
+                        item.receiveShadow = false;
+                    }
+
                     if (item.material.name === "mirror") {
                         // swap out the mirror with a reflector object
                         const mirrorGeometry = new THREE.PlaneGeometry(0.8, 1.6, 1, 1);
@@ -576,9 +586,27 @@ class ThreeManager {
             threeMng.scene.add(room);
         })
 
-        const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
+        const light = new THREE.PointLight(0xffe7d0, 5, 0, 1);
         light.position.set(2.93, 2.08, 0);
         light.castShadow = true;
+        light.shadow.mapSize.width = 2048;
+        light.shadow.mapSize.height = 2048;
+        light.shadow.radius = 5;
+        light.shadow.blurSamples = 25;
+        light.shadow.bias = -0.0001;
+        light.shadow.camera.near = 0.1;
+        light.shadow.camera.far = 500;
+
+        const lamp = new THREE.PointLight(0xffe7d0, 1, 0, 1);
+        lamp.position.set(4, 1.2, -1.6);
+        lamp.castShadow = true;
+        lamp.shadow.mapSize.width = 2048;
+        lamp.shadow.mapSize.height = 2048;
+        lamp.shadow.radius = 5;
+        lamp.shadow.blurSamples = 25;
+        lamp.shadow.bias = -0.0001;
+        lamp.shadow.camera.near = 0.1;
+        lamp.shadow.camera.far = 500;
 
         this.moodLight = new THREE.RectAreaLight(0xffffff, 0.5, 5, 3);
         this.moodLight.position.set(3.30, 2.67, -0.05);
@@ -587,6 +615,7 @@ class ThreeManager {
         const ambientLight = new THREE.AmbientLight(0xd4f8ff, 0.2);
 
         this.scene.add(light);
+        this.scene.add(lamp);
         this.scene.add(this.moodLight);
         this.scene.add(ambientLight);
     }
@@ -624,7 +653,7 @@ class ThreeManager {
             this.inputX = (event.clientX / window.innerWidth) * 2 - 1;
             this.inputY = -(event.clientY / window.innerHeight) * 2 + 1;
             this.isTouching = true;
-        })
+        });
 
         document.addEventListener("touchstart", (event) => {
             if (event.touches.length === 1) {
@@ -632,7 +661,7 @@ class ThreeManager {
                 this.inputY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
                 this.isTouching = true;
             }
-        })
+        });
 
         document.addEventListener("touchmove", (event) => {
             if (event.touches.length === 1) {
@@ -640,25 +669,37 @@ class ThreeManager {
                 this.inputY = -(event.touches[0].clientY / window.innerHeight) * 2 + 1;
                 this.isTouching = true;
             }
-        })
+        });
 
         document.addEventListener("touchend", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
             }, 1000 / 30); // delay to fix bug where it gets stuck
-        })
+        });
 
         document.addEventListener("touchcancel", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
             }, 1000 / 30);
-        })
+        });
 
         document.addEventListener("mouseleave", (event) => {
             setTimeout(() => {
                 this.isTouching = false;
             }, 1000 / 30);
-        })
+        });
+
+        document.addEventListener("keydown", (key) => {
+            if (key.code === "ArrowLeft") {
+                this.goLeft()
+            }
+            if (key.code === "ArrowRight") {
+                this.goRight()
+            }
+        });
+
+        leftArrow.forEach((leftArrow) => leftArrow.addEventListener("click", () => this.goLeft()));
+        rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
     }
 
     initLyrics() {
@@ -681,7 +722,7 @@ class ThreeManager {
         this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
-    initNotebook(){
+    initNotebook() {
         console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
@@ -697,7 +738,7 @@ class ThreeManager {
         this.notebookText.sdfGlyphSize = 128;
 
         this.notebookText.position.set(5, 1, -1.5);
-        this.notebookText.rotation.x = -Math.PI/2;
+        this.notebookText.rotation.x = -Math.PI / 2;
         this.notebookText.text = "JDSLKFJDS";
     }
 
@@ -754,13 +795,25 @@ class ThreeManager {
                 currChar.object = charObject;
             }
 
-            currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime) * 0.001;
-            currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime) * 0.001;
-            currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime) * 0.001;
+            if (this.cameraPosIndex === WINDOW || this.cameraPosIndex === FULL_VIEW) {
+                // only calculate for the positions  where you can see the window
+                currChar.object.visible = true;
+                if (0 < currChar.currentPosition[0] < 3.5) {
+                    // only run calculations for characters in frame
+                    currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime) * 0.001;
+                    currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime) * 0.001;
+                    currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime) * 0.001;
 
-            currChar.object.outlineColor = lyricsData.moodColor;
-            currChar.object.position.set(...currChar.currentPosition);
-            currChar.object.sync();
+                    currChar.object.outlineColor = lyricsData.moodColor;
+                    currChar.object.position.set(...currChar.currentPosition);
+                    currChar.object.sync();
+                } else {
+                    currChar.object.visible = false;
+                }
+            } else {
+                currChar.object.visible = false;
+            }
+
 
             // Increment position of char based on a normalized vector of the end - start position
             // Render the char
@@ -768,7 +821,7 @@ class ThreeManager {
         }
     }
 
-    updateNotebook(){
+    updateNotebook() {
         // let sortedCharsList = Array.from(lyricsData.previousUnits).sort(function(a, b){
         //     return a._data.startTime > b._data.startTime;
         // });
@@ -787,9 +840,10 @@ class ThreeManager {
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
         // TODO: Do this in a better way
-        if (this.cameraPosIndex != BEDROOM && this.cameraPosIndex != FULL_VIEW) {
+        if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
             this.lyrics.text = "";
         }
+
         this.lyrics.sync();
 
         // calculate colors to update lighting based on valence/arousal values
