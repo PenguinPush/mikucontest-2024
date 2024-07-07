@@ -109,17 +109,17 @@ body {
     outline: 4px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     position: relative;
-    width: 100%; /* Add this line to make sure it's visible */
+    width: 100%;
 }
 
 #progress::-webkit-slider-runnable-track {
     border-radius: 12px;
-    height: 16px; /* Ensure the height matches the main slider */
+    height: 16px;
 }
 
 #progress::-moz-range-track {
     border-radius: 12px;
-    height: 16px; /* Ensure the height matches the main slider */
+    height: 16px;
 }
 
 #progress::-webkit-slider-thumb {
@@ -132,7 +132,7 @@ body {
     border-radius: 20px;
     outline: 0 solid #78f0d7;
     transition: outline-width 0.03s ease-in, transform 0.03s ease-in;
-    margin-top: -7px; /* Center thumb vertically */
+    margin-top: -7px;
 }
 
 #progress::-moz-range-thumb {
@@ -177,12 +177,12 @@ body {
 
 #volume::-webkit-slider-runnable-track {
     border-radius: 12px;
-    height: 8px; /* Ensure the height matches the main slider */
+    height: 8px;
 }
 
 #volume::-moz-range-track {
     border-radius: 12px;
-    height: 8px; /* Ensure the height matches the main slider */
+    height: 8px;
 }
 
 #volume::-webkit-slider-thumb {
