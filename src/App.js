@@ -7,34 +7,31 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
 import CameraControls from 'camera-controls';
-
-CameraControls.install({THREE: THREE});
-
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {HalftonePass} from 'three/addons/postprocessing/HalftonePass.js';
 import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
 import {
-    maxTextScale,
-    minTextScale,
-    baseTextSize,
     baseFov,
-    minFov,
-    maxFov,
-    songList,
-    cameraPositions,
+    baseTextSize,
     BEDROOM,
-    WINDOW,
+    cameraPositions,
     FULL_VIEW,
-    TV,
-	NOTEBOOK,
-    noShadows
     MAX_CHARS_PER_LINE,
     MAX_LINES,
-    WINDOW_TEXT_SIZE,
+    maxFov,
+    maxTextScale,
+    minFov,
+    minTextScale,
+    noShadows,
     NOTEBOOK_TEXT_SIZE,
+    songList,
+    WINDOW,
+    WINDOW_TEXT_SIZE,
 } from "./constants";
+
+CameraControls.install({THREE: THREE});
 
 // lyrics information
 class LyricsData {
@@ -59,6 +56,9 @@ class LyricsData {
         this.arousal = -1;
         this.language = "";
         this.enIndex = 0;
+
+        this.rawCharList = []
+        this.sortedCharsList = []
 
         this.moodColor = new THREE.Color(1, 1, 1);
     }
@@ -92,6 +92,40 @@ class LyricsData {
 
     normalizeValenceArousal(valenceArousal) {
         [this.valence, this.arousal] = [(valenceArousal.v + 1) / 2, (valenceArousal.a + 1) / 2];
+    }
+
+    calculateNotebook() {
+        this.rawCharList = Array.from(this.previousUnits).sort(function (a, b) {
+            return a._data.startTime > b._data.startTime;
+        });
+
+        // Add spaces
+        this.sortedCharsList = [];
+        for (let i = 0; i < this.rawCharList.length; i++) {
+            this.sortedCharsList.push(this.rawCharList[i]);
+            if (this.rawCharList[i].parent.language === "en") {
+                if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !this.rawCharList[i].parent.rawPos.includes("S")) {
+                    this.sortedCharsList.push({
+                            _data: {
+                                startTime: this.rawCharList[i]._data.startTime,
+                            },
+                            text: "　"
+                        }
+                    );
+                }
+            } else {
+                if (this.rawCharList[i].parent.parent.lastChar === this.rawCharList[i]) {
+                    this.sortedCharsList.push({
+                            _data: {
+                                startTime: this.rawCharList[i]._data.startTime,
+                            },
+                            text: "　"
+                        }
+                    );
+                }
+            }
+        }
+        console.log(this.sortedCharsList)
     }
 }
 
@@ -143,7 +177,7 @@ function _initPlayer() {
     });
 
     player.addListener({
-        onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onPlay, onPause, onStop,
+        onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onLyricsLoad, onPlay, onPause, onStop,
     });
     player.fps = 60;
 }
@@ -328,6 +362,10 @@ function onTimeUpdate(pos) {
     }
 }
 
+function onLyricsLoad(){
+    lyricsData.calculateNotebook()
+}
+
 function onPlay() {
     playBtn.style.display = "none"
     pauseBtn.style.display = "inline" // toggle button to pause
@@ -490,8 +528,8 @@ class ThreeManager {
         this.initScene();
         this.initCamera();
         this.initControls();
-        this.initNotebook();
         this.initLyrics();
+        this.initNotebook();
         this.initPostProcessing();
 
         this.renderer.shadowMap.needsUpdate = true;
@@ -694,15 +732,6 @@ class ThreeManager {
             }, 1000 / 30);
         });
 
-        document.addEventListener("keydown", (key) => {
-            if (key.code === "ArrowLeft") {
-                this.goLeft()
-            }
-            if (key.code === "ArrowRight") {
-                this.goRight()
-            }
-        });
-
         leftArrow.forEach((leftArrow) => leftArrow.addEventListener("click", () => this.goLeft()));
         rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
     }
@@ -728,20 +757,16 @@ class ThreeManager {
     }
 
     initNotebook() {
-        console.log("Notebook is being initialized!");
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
         this.notebookText.fontSize = NOTEBOOK_TEXT_SIZE;
-        this.notebookText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+        this.notebookText.font = "src/assets/fonts/Yomogi-Regular.ttf"
 
-        this.notebookText.outlineOffsetX = "8%";
-        this.notebookText.outlineOffsetY = "6%";
-        this.notebookText.outlineColor = (0, 0, 0);
         this.notebookText.sdfGlyphSize = 128;
 
         this.notebookText.position.set(1.65, 0.35, 0.25);
-        this.notebookText.rotation.x = -Math.PI/2;
-        this.notebookText.rotation.z = 16*Math.PI/31;
+        this.notebookText.rotation.x = -Math.PI / 2;
+        this.notebookText.rotation.z = 16 * Math.PI / 31;
     }
 
     initPostProcessing() {
@@ -802,6 +827,8 @@ class ThreeManager {
                 currChar.object.visible = true;
                 if (0 < currChar.currentPosition[0] < 3.5) {
                     // only run calculations for characters in frame
+
+                    // Increment position of char based on a normalized vector of the end - start position
                     currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime) * 0.001;
                     currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime) * 0.001;
                     currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime) * 0.001;
@@ -815,40 +842,14 @@ class ThreeManager {
             } else {
                 currChar.object.visible = false;
             }
-
-
-            // Increment position of char based on a normalized vector of the end - start position
-            // Render the char
-            // If char has reached the target position, 
         }
     }
 
-    updateNotebook(){
-        let rawCharList = Array.from(lyricsData.previousUnits).sort(function(a, b){
-            return a._data.startTime > b._data.startTime;
-        });
-
-        // Add spaces
-        let sortedCharsList = [];
-        for (let i=0; i<rawCharList.length; i++){
-            sortedCharsList.push(rawCharList[i]);
-            if (rawCharList[i].parent.parent.lastChar === rawCharList[i]){
-                sortedCharsList.push({
-                    _data: {
-                        startTime: rawCharList[i]._data.startTime,
-                    },
-                    text: "　"
-                }
-                　);
-            }
-        }
-
-
+    updateNotebook() {
         // Find the last character to be rendered
-        let lastChar = sortedCharsList.length - 1;
-        for (let i=0; i<sortedCharsList.length; i++){
-
-            if (sortedCharsList[i]._data.startTime > player.videoPosition){
+        let lastChar = lyricsData.sortedCharsList.length - 1;
+        for (let i = 0; i < lyricsData.sortedCharsList.length; i++) {
+            if (lyricsData.sortedCharsList[i]._data.startTime > player.videoPosition) {
                 lastChar = i - 1;
                 break;
             }
@@ -858,17 +859,18 @@ class ThreeManager {
         let cnt = 0;
 
         let startPos = Math.max(0, Math.floor(lastChar / (MAX_CHARS_PER_LINE * MAX_LINES)) * MAX_CHARS_PER_LINE * MAX_LINES)
-        for (let i=startPos; i<=lastChar; i++){
-            newText.push(sortedCharsList[i].text);
-            if (cnt % MAX_CHARS_PER_LINE == MAX_CHARS_PER_LINE - 1){
+        for (let i = startPos; i <= lastChar; i++) {
+            newText.push(lyricsData.sortedCharsList[i].text);
+            if (cnt % MAX_CHARS_PER_LINE === MAX_CHARS_PER_LINE - 1) {
                 newText.push("\n");
             }
             cnt += 1;
         }
 
-        let text = newText.join("")
-        this.notebookText.text = text;
+        this.notebookText.text = newText.join("");
         this.notebookText.sync();
+
+        console.log(newText)
     }
 
     update(pos) {
