@@ -1,4 +1,6 @@
 // import necessary modules
+import {MeshBasicMaterial, MeshStandardMaterial, PCFSoftShadowMap, VSMShadowMap} from "three";
+
 const {Player} = TextAliveApp;
 import * as THREE from "three";
 import CameraControls from "https://cdn.jsdelivr.net/npm/camera-controls@2.8.5/+esm";
@@ -65,6 +67,7 @@ class LyricsData {
         this.sortedCharsList = []
 
         this.moodColor = new THREE.Color(1, 1, 1);
+        this.glyphSize = 32;
     }
 
     // calculate text effects
@@ -86,9 +89,7 @@ class LyricsData {
             const b = (0.85 - lyricsData.arousal) * 2;
             const g = -0.5 * ((r ** 2 + b ** 2) ** 0.5 - 2);
 
-            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1),
-                THREE.MathUtils.clamp(g, 0, 1),
-                THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
+            this.moodColor = new THREE.Color(THREE.MathUtils.clamp(r, 0, 1), THREE.MathUtils.clamp(g, 0, 1), THREE.MathUtils.clamp(b, 0, 1)).offsetHSL(0, 1, 0);
         } else {
             this.moodColor = new THREE.Color(1, 1, 1);
         }
@@ -111,24 +112,20 @@ class LyricsData {
                 if (this.rawCharList[i].parent.next) {
                     if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !punctuation.includes(this.rawCharList[i].parent.next.text)) {
                         this.sortedCharsList.push({
-                                _data: {
-                                    startTime: this.rawCharList[i]._data.startTime,
-                                },
-                                text: "　"
-                            }
-                        );
+                            _data: {
+                                startTime: this.rawCharList[i]._data.startTime,
+                            }, text: "　"
+                        });
                     }
                 }
 
             } else {
                 if (this.rawCharList[i].parent.parent.lastChar === this.rawCharList[i]) {
                     this.sortedCharsList.push({
-                            _data: {
-                                startTime: this.rawCharList[i]._data.startTime,
-                            },
-                            text: "　"
-                        }
-                    );
+                        _data: {
+                            startTime: this.rawCharList[i]._data.startTime,
+                        }, text: "　"
+                    });
                 }
             }
         }
@@ -191,8 +188,6 @@ function _initPlayer() {
 // player event handlers
 function onAppReady(app) {
     if (!app.managed) {
-        document.querySelector("#control").style.display = "block";
-
         // set up controls
         playBtn.addEventListener("click", () => player.video && player.requestPlay());
 
@@ -257,23 +252,52 @@ function onAppReady(app) {
         });
 
         graphics.addEventListener("change", () => {
+            console.log(threeMng.renderer.info)
+
             if (graphics.checked) {
-                threeMng.renderer.shadowMap.enabled = false;
-                threeMng.scene.traverse(function (node) {
-                    if (node instanceof THREE.Mesh) {
-                        node.castShadow = false;
-                        node.receiveShadow = false;
-                    }
-                });
+                threeMng.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                threeMng.light.shadow.mapSize.width = 128;
+                threeMng.light.shadow.mapSize.height = 128;
+                threeMng.lamp.shadow.mapSize.width = 128;
+                threeMng.lamp.shadow.mapSize.height = 128;
+                threeMng.light.shadow.radius = 2;
+                threeMng.lamp.shadow.radius = 2;
+
+                threeMng.mirrorBase.visible = true;
+                threeMng.mirrorReflector.visible = false;
+
+                lyricsData.glyphSize = 32;
+                threeMng.textObjects.forEach((object => {
+                    object.sdfGlyphSize = 32;
+                    object.sync()
+                }));
+
             } else {
-                threeMng.renderer.shadowMap.enabled = true;
-                threeMng.scene.traverse(function (node) {
-                    if (node instanceof THREE.Mesh) {
-                        node.castShadow = true;
-                        node.receiveShadow = true;
-                    }
-                });
+                threeMng.renderer.shadowMap.type = THREE.VSMShadowMap;
+                threeMng.light.shadow.mapSize.width = 512;
+                threeMng.light.shadow.mapSize.height = 512;
+                threeMng.lamp.shadow.mapSize.width = 512;
+                threeMng.lamp.shadow.mapSize.height = 512;
+                threeMng.light.shadow.radius = 5;
+                threeMng.lamp.shadow.radius = 5;
+
+                threeMng.mirrorBase.visible = false;
+                threeMng.mirrorReflector.visible = true;
+
+                lyricsData.glyphSize = 64;
+                threeMng.textObjects.forEach((object => {
+                    object.sdfGlyphSize = 64;
+                    object.sync()
+                }));
             }
+
+            threeMng.scene.traverse((object) => {
+                if (object.isLight && object.shadow) {
+                    object.shadow.dispose();
+                }
+            });
+
+            threeMng.renderer.shadowMap.needsUpdate = true;
         });
 
         language.addEventListener("change", () => {
@@ -524,18 +548,20 @@ class ThreeManager {
         this.rotateStrength = 1 / 12;
         this.skySpeed = 1;
 
+        this.textObjects = [];
+
         this.innerSky = null;
         this.coloredSky = null;
         this.outerSky = null;
 
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.autoUpdate = false;
-        this.renderer.shadowMap.type = THREE.VSMShadowMap;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
         this.initScene();
         this.initCamera();
         this.initControls();
-        this.initLyrics();
+        this.initBigLyrics();
         this.initNotebook();
         this.initPolaroids();
         this.initPostProcessing();
@@ -565,7 +591,6 @@ class ThreeManager {
 
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             const room = gltf.scene;
-            let mirrorBase;
 
             // edit the bedroom
             room.traverse((item) => {
@@ -578,6 +603,7 @@ class ThreeManager {
                 if (item instanceof THREE.Light) {
                     // disable blender lights, they don't translate well
                     item.intensity = 0;
+                    item.dispose();
                 }
 
                 if (item.material) {
@@ -599,8 +625,11 @@ class ThreeManager {
                         mirror.position.copy(item.position);
                         mirror.rotation.set(0, -Math.PI / 2, 0)
 
-                        mirrorBase = item;
-                        threeMng.scene.add(mirror);
+                        threeMng.mirrorBase = item;
+                        threeMng.mirrorReflector = mirror;
+                        threeMng.mirrorReflector.visible = false;
+
+                        threeMng.scene.add(threeMng.mirrorReflector);
                     }
 
                     // if (item.material.name === "polaroid"){
@@ -638,31 +667,30 @@ class ThreeManager {
                 }
             })
 
-            mirrorBase.parent.remove(mirrorBase);
             threeMng.scene.add(room);
         })
 
-        const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
-        light.position.set(2.93, 2.08, 0);
-        light.castShadow = true;
-        light.shadow.mapSize.width = 2048;
-        light.shadow.mapSize.height = 2048;
-        light.shadow.radius = 5;
-        light.shadow.blurSamples = 25;
-        light.shadow.bias = -0.0001;
-        light.shadow.camera.near = 0.1;
-        light.shadow.camera.far = 500;
+        this.light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
+        this.light.position.set(2.93, 2.08, 0);
+        this.light.castShadow = true;
+        this.light.shadow.mapSize.width = 128;
+        this.light.shadow.mapSize.height = 128;
+        this.light.shadow.radius = 2;
+        this.light.shadow.blurSamples = 25;
+        this.light.shadow.bias = -0.0001;
+        this.light.shadow.camera.near = 0.1;
+        this.light.shadow.camera.far = 500;
 
-        const lamp = new THREE.PointLight(0xffe7d0, 1, 0, 1);
-        lamp.position.set(4, 1.2, -1.6);
-        lamp.castShadow = true;
-        lamp.shadow.mapSize.width = 2048;
-        lamp.shadow.mapSize.height = 2048;
-        lamp.shadow.radius = 5;
-        lamp.shadow.blurSamples = 25;
-        lamp.shadow.bias = -0.0001;
-        lamp.shadow.camera.near = 0.1;
-        lamp.shadow.camera.far = 500;
+        this.lamp = new THREE.PointLight(0xffe7d0, 1, 0, 1);
+        this.lamp.position.set(4, 1.2, -1.6);
+        this.lamp.castShadow = true;
+        this.lamp.shadow.mapSize.width = 128;
+        this.lamp.shadow.mapSize.height = 128;
+        this.lamp.shadow.radius = 2;
+        this.lamp.shadow.blurSamples = 25;
+        this.lamp.shadow.bias = -0.0001;
+        this.lamp.shadow.camera.near = 0.1;
+        this.lamp.shadow.camera.far = 500;
 
         this.moodLight = new THREE.RectAreaLight(0xffffff, 0.5, 5, 3);
         this.moodLight.position.set(3.30, 2.67, -0.05);
@@ -670,8 +698,8 @@ class ThreeManager {
 
         const ambientLight = new THREE.AmbientLight(0xd4f8ff, 0.2);
 
-        this.scene.add(light);
-        this.scene.add(lamp);
+        this.scene.add(this.light);
+        this.scene.add(this.lamp);
         this.scene.add(this.moodLight);
         this.scene.add(ambientLight);
     }
@@ -749,9 +777,10 @@ class ThreeManager {
         rightArrow.forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
     }
 
-    initLyrics() {
+    initBigLyrics() {
         this.bigLyrics = new Text();
         this.scene.add(this.bigLyrics);
+        this.textObjects.push(this.bigLyrics);
 
         // set properties for the text
         this.bigLyrics.fontSize = BASE_TEXT_SIZE;
@@ -763,7 +792,7 @@ class ThreeManager {
         this.bigLyrics.outlineOffsetX = "8%";
         this.bigLyrics.outlineOffsetY = "6%";
         this.bigLyrics.outlineColor = (0, 0, 0);
-        this.bigLyrics.sdfGlyphSize = 128;
+        this.bigLyrics.sdfGlyphSize = lyricsData.glyphSize;
 
         this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
         this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
@@ -772,10 +801,12 @@ class ThreeManager {
     initNotebook() {
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
+        this.textObjects.push(this.notebookText);
+
         this.notebookText.fontSize = NOTEBOOK_TEXT_SIZE;
         this.notebookText.font = "src/assets/fonts/Yomogi-Regular.ttf"
 
-        this.notebookText.sdfGlyphSize = 128;
+        this.notebookText.sdfGlyphSize = lyricsData.glyphSize;
 
         this.notebookText.position.set(1.65, 0.35, 0.25);
         this.notebookText.rotation.x = -Math.PI / 2;
@@ -801,11 +832,12 @@ class ThreeManager {
             polaroidText.outlineOffsetX = "8%";
             polaroidText.outlineOffsetY = "6%";
             polaroidText.outlineColor = (0, 0, 0);
-            polaroidText.sdfGlyphSize = 128;
+            polaroidText.sdfGlyphSize = lyricsData.glyphSize;
 
             polaroidText.sync();
             this.scene.add(polaroidText);
             this.polaroids.push(polaroidText);
+            this.textObjects.push(polaroidText);
         }
     }
 
@@ -864,7 +896,7 @@ class ThreeManager {
                 charObject.anchorY = "50%";
                 charObject.outlineOffsetX = "8%";
                 charObject.outlineOffsetY = "6%";
-                charObject.sdfGlyphSize = 128;
+                charObject.sdfGlyphSize = lyricsData.glyphSize;
                 charObject.text = currChar.text;
 
                 // TODO: Make the lyrics face the right direction
@@ -891,6 +923,8 @@ class ThreeManager {
                     currChar.object.sync();
                 } else {
                     currChar.object.visible = false;
+                    currChar.object.dispose()
+                    this.scene.remove(currChar.object);
                 }
             } else {
                 currChar.object.visible = false;

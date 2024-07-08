@@ -4,7 +4,7 @@ export const minTextScale = 0.9;
 export const BASE_TEXT_SIZE = 0.6;
 export const baseFov = 60;
 export const minFov = 60;
-export const maxFov = 90;
+export const maxFov = 110;
 
 export const songList = [
     ["https://piapro.jp/t/hZ35/20240130103028", 4592293, 2727635, 2824326, 59415, 13962],
