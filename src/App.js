@@ -68,6 +68,9 @@ class LyricsData {
 
         this.moodColor = new THREE.Color(1, 1, 1);
         this.glyphSize = 32;
+        this.choruses = [];
+        this.chorusIndex = 0;
+        this.textLoaded = false;
     }
 
     // calculate text effects
@@ -187,134 +190,129 @@ function _initPlayer() {
 
 // player event handlers
 function onAppReady(app) {
-    if (!app.managed) {
-        // set up controls
-        playBtn.addEventListener("click", () => player.video && player.requestPlay());
+    // set up controls
+    playBtn.addEventListener("click", () => player.video && player.requestPlay());
 
-        pauseBtn.addEventListener("click", () => player.video && player.requestPause());
+    pauseBtn.addEventListener("click", () => player.video && player.requestPause());
 
-        volumeSlider.addEventListener("input", () => {
-            player.volume = volumeSlider.value;
-            volumeSlider.style.background = `linear-gradient(90deg, #78f0d7 ${volumeSlider.value}%, #a9a9a9 ${volumeSlider.value}%)`;
-        });
+    volumeSlider.addEventListener("input", () => {
+        player.volume = volumeSlider.value;
+        volumeSlider.style.background = `linear-gradient(90deg, #78f0d7 ${volumeSlider.value}%, #a9a9a9 ${volumeSlider.value}%)`;
+    });
 
-        progressBar.addEventListener("input", () => player.requestMediaSeek(progressBar.value * player.video.duration));
+    progressBar.addEventListener("input", () => player.requestMediaSeek(progressBar.value * player.video.duration));
 
-        songSelector.addEventListener("change", () => {
-            if (songSelector.value >= 0) { // non-custom song
-                loadSong(songSelector.value, false);
-            } else { // custom song
-                // bring up settings
-                settingsToggle.checked = true;
-                settings.classList.add('show');
-                setTimeout(() => {
-                    settings.style.pointerEvents = "auto";
-                }, 100); // wait for the slide animation to finish playing
+    songSelector.addEventListener("change", () => {
+        if (songSelector.value >= 0) { // non-custom song
+            loadSong(songSelector.value, false);
+        } else { // custom song
+            // bring up settings
+            settingsToggle.checked = true;
+            settings.classList.add('show');
+            setTimeout(() => {
+                settings.style.pointerEvents = "auto";
+            }, 100); // wait for the slide animation to finish playing
 
-                loadSong(customSong.value, true);
-            }
-        });
-
-        settingsToggle.addEventListener("change", () => {
-            if (settingsToggle.checked) {
-                settings.classList.add('show');
-
-                setTimeout(() => {
-                    settings.style.pointerEvents = "auto";
-                }, 100); // wait for the slide animation to finish playing
-            } else {
-                settings.classList.remove('show');
-
-                setTimeout(() => {
-                    settings.style.pointerEvents = "none";
-                }, 100); // wait for the slide animation to finish playing
-            }
-        });
-
-        customSong.addEventListener("change", () => {
             loadSong(customSong.value, true);
-        });
+        }
+    });
 
-        accessibility.addEventListener("change", () => {
-            if (threeMng) {
-                if (accessibility.checked) {
-                    threeMng.movementStrength = 0;
-                    threeMng.rotateStrength = 1 / 24;
-                    threeMng.cameraControls.smoothTime = 0.1;
-                    threeMng.skySpeed = 0.1;
-                } else {
-                    threeMng.movementStrength = 1 / 10;
-                    threeMng.rotateStrength = 1 / 12;
-                    threeMng.cameraControls.smoothTime = 0.25;
-                    threeMng.skySpeed = 1;
-                }
-            }
-        });
+    settingsToggle.addEventListener("change", () => {
+        if (settingsToggle.checked) {
+            settings.classList.add('show');
 
-        graphics.addEventListener("change", () => {
-            console.log(threeMng.renderer.info)
+            setTimeout(() => {
+                settings.style.pointerEvents = "auto";
+            }, 100); // wait for the slide animation to finish playing
+        } else {
+            settings.classList.remove('show');
 
-            if (graphics.checked) {
-                threeMng.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                threeMng.light.shadow.mapSize.width = 128;
-                threeMng.light.shadow.mapSize.height = 128;
-                threeMng.lamp.shadow.mapSize.width = 128;
-                threeMng.lamp.shadow.mapSize.height = 128;
-                threeMng.light.shadow.radius = 2;
-                threeMng.lamp.shadow.radius = 2;
+            setTimeout(() => {
+                settings.style.pointerEvents = "none";
+            }, 100); // wait for the slide animation to finish playing
+        }
+    });
 
-                threeMng.mirrorBase.visible = true;
-                threeMng.mirrorReflector.visible = false;
+    customSong.addEventListener("change", () => {
+        loadSong(customSong.value, true);
+    });
 
-                lyricsData.glyphSize = 32;
-                threeMng.textObjects.forEach((object => {
-                    object.sdfGlyphSize = 32;
-                    object.sync()
-                }));
-
+    accessibility.addEventListener("change", () => {
+        if (threeMng) {
+            if (accessibility.checked) {
+                threeMng.movementStrength = 0;
+                threeMng.rotateStrength = 1 / 24;
+                threeMng.cameraControls.smoothTime = 0.1;
+                threeMng.skySpeed = 0.1;
             } else {
-                threeMng.renderer.shadowMap.type = THREE.VSMShadowMap;
-                threeMng.light.shadow.mapSize.width = 512;
-                threeMng.light.shadow.mapSize.height = 512;
-                threeMng.lamp.shadow.mapSize.width = 512;
-                threeMng.lamp.shadow.mapSize.height = 512;
-                threeMng.light.shadow.radius = 5;
-                threeMng.lamp.shadow.radius = 5;
-
-                threeMng.mirrorBase.visible = false;
-                threeMng.mirrorReflector.visible = true;
-
-                lyricsData.glyphSize = 64;
-                threeMng.textObjects.forEach((object => {
-                    object.sdfGlyphSize = 64;
-                    object.sync()
-                }));
+                threeMng.movementStrength = 1 / 10;
+                threeMng.rotateStrength = 1 / 12;
+                threeMng.cameraControls.smoothTime = 0.25;
+                threeMng.skySpeed = 1;
             }
+        }
+    });
 
-            threeMng.scene.traverse((object) => {
-                if (object.isLight && object.shadow) {
-                    object.shadow.dispose();
-                }
-            });
+    graphics.addEventListener("change", () => {
+        if (graphics.checked) {
+            threeMng.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            threeMng.light.shadow.mapSize.width = 128;
+            threeMng.light.shadow.mapSize.height = 128;
+            threeMng.lamp.shadow.mapSize.width = 128;
+            threeMng.lamp.shadow.mapSize.height = 128;
+            threeMng.light.shadow.radius = 2;
+            threeMng.lamp.shadow.radius = 2;
 
-            threeMng.renderer.shadowMap.needsUpdate = true;
+            threeMng.mirrorBase.visible = true;
+            threeMng.mirrorReflector.visible = false;
+
+            lyricsData.glyphSize = 32;
+            threeMng.textObjects.forEach((object => {
+                object.sdfGlyphSize = 32;
+                object.sync()
+            }));
+
+        } else {
+            threeMng.renderer.shadowMap.type = THREE.VSMShadowMap;
+            threeMng.light.shadow.mapSize.width = 512;
+            threeMng.light.shadow.mapSize.height = 512;
+            threeMng.lamp.shadow.mapSize.width = 512;
+            threeMng.lamp.shadow.mapSize.height = 512;
+            threeMng.light.shadow.radius = 5;
+            threeMng.lamp.shadow.radius = 5;
+
+            threeMng.mirrorBase.visible = false;
+            threeMng.mirrorReflector.visible = true;
+
+            lyricsData.glyphSize = 64;
+            threeMng.textObjects.forEach((object => {
+                object.sdfGlyphSize = 64;
+                object.sync()
+            }));
+        }
+
+        threeMng.scene.traverse((object) => {
+            if (object.isLight && object.shadow) {
+                object.shadow.dispose();
+            }
         });
 
-        language.addEventListener("change", () => {
-            if (language.checked) {
-                document.querySelector("label[for='graphics']").textContent = "低グラフィックス";
-                document.querySelector("label[for='accessibility']").textContent = "動きを減らす";
-                credits.textContent = "制作";
-            } else {
-                document.querySelector("label[for='graphics']").textContent = "Low Graphics";
-                document.querySelector("label[for='accessibility']").textContent = "Reduce Motion";
-                credits.textContent = "Credits";
-            }
-        });
-    }
+        threeMng.renderer.shadowMap.needsUpdate = true;
+    });
+
+    language.addEventListener("change", () => {
+        if (language.checked) {
+            document.querySelector("label[for='graphics']").textContent = "低グラフィックス";
+            document.querySelector("label[for='accessibility']").textContent = "動きを減らす";
+            credits.textContent = "制作";
+        } else {
+            document.querySelector("label[for='graphics']").textContent = "Low Graphics";
+            document.querySelector("label[for='accessibility']").textContent = "Reduce Motion";
+            credits.textContent = "Credits";
+        }
+    });
 
     if (!app.songUrl) {
-        console.log("first load")
         if (songSelector.value >= 0) { // non-custom song
             loadSong(songSelector.value, false);
         } else { // custom song
@@ -329,6 +327,42 @@ function onVideoReady(v) {
     let p = player.video.firstPhrase;
 
     while (c) {
+        if (!lyricsData.previousUnits.has(c)) {
+            let randomNum = 0.5 - Math.random();
+            while (Math.abs(randomNum - lyricsData.previousRandom) < 0.2) {
+                randomNum = 0.5 - Math.random();
+            }
+            lyricsData.previousRandom = randomNum;
+            lyricsData.language = c.parent.language;
+
+            if (lyricsData.language === "en") {
+                // place the text closer if it's english
+                lyricsData.floatingChars.push({
+                    text: c.text,
+                    object: null,
+                    startPosition: [1.3, 1.75 - lyricsData.enIndex * 0.2, 3.2],
+                    creationTime: c.startTime,
+                    movementVector: [1, 0, 0],
+                    currentPosition: [0, 0, 0],
+                });
+
+                lyricsData.enIndex = (lyricsData.enIndex + 1) % 5
+            } else {
+                lyricsData.floatingChars.push({
+                    text: c.text,
+                    object: null,
+                    startPosition: [1.3, 1.35 + randomNum, 3.2 + (0.5 - Math.random())],
+                    creationTime: c.startTime,
+                    movementVector: [1, 0, 0],
+                    currentPosition: [0, 0, 0],
+                });
+
+                lyricsData.enIndex = 0
+            }
+
+            lyricsData.previousUnits.add(c);
+        }
+
         c.animate = animateChar.bind(this);
         c = c.next;
     }
@@ -340,6 +374,8 @@ function onVideoReady(v) {
         p.animate = animatePhrase.bind(this);
         p = p.next;
     }
+
+    threeMng.initAllText().then(() => lyricsData.textLoaded = true);
 }
 
 function onTimerReady(t) {
@@ -350,18 +386,18 @@ function onTimerReady(t) {
     }
 
     // generate progress bar with css gradients
-    const choruses = player.getChoruses();
+    lyricsData.choruses = player.getChoruses();
     const colors = ['#78f0d7', '#ff629d'];
     let progressGradient = 'linear-gradient(60deg, ';
 
-    if (choruses.length === 0) {
+    if (lyricsData.choruses.length === 0) {
         progressGradient += `${colors[0]} 0%, ${colors[0]} 100%`;
     } else {
         // place colors at the choruses
         progressGradient += `${colors[0]} 0%, `;
-        for (let i = 0; i < choruses.length; i++) {
-            let startPercentage = (choruses[i].startTime / player.video.duration) * 100;
-            let endPercentage = (choruses[i].endTime / player.video.duration) * 100;
+        for (let i = 0; i < lyricsData.choruses.length; i++) {
+            let startPercentage = (lyricsData.choruses[i].startTime / player.video.duration) * 100;
+            let endPercentage = (lyricsData.choruses[i].endTime / player.video.duration) * 100;
             if (i === 0) {
                 // start with non-chorus
                 progressGradient += `${colors[0]} ${startPercentage}%, `;
@@ -371,7 +407,7 @@ function onTimerReady(t) {
             }
             // place the chorus segment stops
             progressGradient += `${colors[1]} ${startPercentage}%, ${colors[1]} ${endPercentage}%, `;
-            if (i < choruses.length - 1) {
+            if (i < lyricsData.choruses.length - 1) {
                 // close off the last chorus with a non-chorus stop
                 progressGradient += `${colors[0]} ${endPercentage}%, `;
             }
@@ -395,6 +431,12 @@ function onTimeUpdate(pos) {
     if (pos < player.video.firstChar.startTime) {
         lyricsData.word = "";
     }
+
+    if (lyricsData.choruses[lyricsData.chorusIndex].contains(pos)) {
+        console.log('a');
+    }
+
+    console.log(lyricsData.choruses[lyricsData.chorusIndex]);
 }
 
 function onPlay() {
@@ -462,42 +504,6 @@ function loadSong(value, isCustom) {
 }
 
 function animateChar(pos, unit) {
-    if (!lyricsData.previousUnits.has(unit)) {
-        let randomNum = 0.5 - Math.random();
-        while (Math.abs(randomNum - lyricsData.previousRandom) < 0.2) {
-            randomNum = 0.5 - Math.random();
-        }
-        lyricsData.previousRandom = randomNum;
-        lyricsData.language = unit.parent.language;
-
-        if (lyricsData.language === "en") {
-            // place the text closer if it's english
-            lyricsData.floatingChars.push({
-                text: unit.text,
-                object: null,
-                startPosition: [1.3, 1.75 - lyricsData.enIndex * 0.2, 3.2],
-                creationTime: unit.startTime,
-                movementVector: [1, 0, 0],
-                currentPosition: [0, 0, 0],
-            });
-
-            lyricsData.enIndex = (lyricsData.enIndex + 1) % 5
-        } else {
-            lyricsData.floatingChars.push({
-                text: unit.text,
-                object: null,
-                startPosition: [1.3, 1.35 + randomNum, 3.2 + (0.5 - Math.random())],
-                creationTime: unit.startTime,
-                movementVector: [1, 0, 0],
-                currentPosition: [0, 0, 0],
-            });
-
-            lyricsData.enIndex = 0
-        }
-
-        lyricsData.previousUnits.add(unit);
-    }
-
     if (unit.contains(pos)) {
         lyricsData.char = unit.text;
     }
@@ -520,8 +526,7 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    if (threeMng.composer && threeMng.innerSky && threeMng.coloredSky && threeMng.outerSky) {
-        // only update once everything is done loading
+    if (threeMng.composer) {
         threeMng.update(position);
     }
     window.requestAnimationFrame(() => update());
@@ -561,9 +566,6 @@ class ThreeManager {
         this.initScene();
         this.initCamera();
         this.initControls();
-        this.initBigLyrics();
-        this.initNotebook();
-        this.initPolaroids();
         this.initPostProcessing();
 
         this.renderer.shadowMap.needsUpdate = true;
@@ -791,11 +793,37 @@ class ThreeManager {
         this.bigLyrics.anchorY = "50%";
         this.bigLyrics.outlineOffsetX = "8%";
         this.bigLyrics.outlineOffsetY = "6%";
-        this.bigLyrics.outlineColor = (0, 0, 0);
         this.bigLyrics.sdfGlyphSize = lyricsData.glyphSize;
 
         this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
         this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+    }
+
+    initFloatingChars() {
+        for (let i = 0; i < lyricsData.floatingChars.length; i++) {
+            let currChar = lyricsData.floatingChars[i];
+            if (currChar.object == null) {
+                let charObject = new Text();
+                this.scene.add(charObject);
+
+                charObject.fontSize = WINDOW_TEXT_SIZE;
+                charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+
+                charObject.textAlign = "center"
+                charObject.anchorX = "50%";
+                charObject.anchorY = "50%";
+                charObject.outlineOffsetX = "8%";
+                charObject.outlineOffsetY = "6%";
+                charObject.sdfGlyphSize = lyricsData.glyphSize;
+                charObject.text = currChar.text;
+
+                charObject.position.set(...currChar.currentPosition);
+                charObject.rotation.y = Math.PI;
+                charObject.rotation.z = (0.5 - Math.random()) / 4;
+
+                currChar.object = charObject;
+            }
+        }
     }
 
     initNotebook() {
@@ -829,9 +857,7 @@ class ThreeManager {
             polaroidText.textAlign = "center"
             polaroidText.anchorX = "50%";
             polaroidText.anchorY = "50%";
-            polaroidText.outlineOffsetX = "8%";
-            polaroidText.outlineOffsetY = "6%";
-            polaroidText.outlineColor = (0, 0, 0);
+            polaroidText.outlineBlur = 0.05;
             polaroidText.sdfGlyphSize = lyricsData.glyphSize;
 
             polaroidText.sync();
@@ -876,6 +902,7 @@ class ThreeManager {
             this.bigLyrics.fontSize = BASE_TEXT_SIZE * lyricsData.textScale;
             this.bigLyrics.letterSpacing = lyricsData.stretch / 10;
             this.bigLyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
+            this.bigLyrics.outlineColor = lyricsData.moodColor;
         }
 
         this.bigLyrics.sync();
@@ -884,47 +911,23 @@ class ThreeManager {
     updateFloatingChars() {
         for (let i = 0; i < lyricsData.floatingChars.length; i++) {
             let currChar = lyricsData.floatingChars[i];
-            if (currChar.object == null) {
-                let charObject = new Text();
-                this.scene.add(charObject);
-
-                charObject.fontSize = WINDOW_TEXT_SIZE;
-                charObject.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
-
-                charObject.textAlign = "center"
-                charObject.anchorX = "50%";
-                charObject.anchorY = "50%";
-                charObject.outlineOffsetX = "8%";
-                charObject.outlineOffsetY = "6%";
-                charObject.sdfGlyphSize = lyricsData.glyphSize;
-                charObject.text = currChar.text;
-
-                // TODO: Make the lyrics face the right direction
-                charObject.position.set(...currChar.currentPosition);
-                charObject.rotation.y = Math.PI;
-                charObject.rotation.z = (0.5 - Math.random()) / 4;
-
-                currChar.object = charObject;
-            }
 
             if (this.cameraPosIndex === WINDOW) {
-                // only calculate for the positions  where you can see the window
-                currChar.object.visible = true;
+                // only calculate for the positions where you can see the window
                 if (0 < currChar.currentPosition[0] < 3.5) {
                     // only run calculations for characters in frame
+                    currChar.object.visible = true;
 
                     // Increment position of char based on a normalized vector of the end - start position
-                    currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime) * 0.001;
-                    currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime) * 0.001;
-                    currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime) * 0.001;
+                    currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (player.videoPosition - currChar.creationTime + 200) * 0.001;
+                    currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (player.videoPosition - currChar.creationTime + 200) * 0.001;
+                    currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (player.videoPosition - currChar.creationTime + 200) * 0.001;
 
                     currChar.object.outlineColor = lyricsData.moodColor;
                     currChar.object.position.set(...currChar.currentPosition);
                     currChar.object.sync();
                 } else {
                     currChar.object.visible = false;
-                    currChar.object.dispose()
-                    this.scene.remove(currChar.object);
                 }
             } else {
                 currChar.object.visible = false;
@@ -986,8 +989,9 @@ class ThreeManager {
                     polaroid.fillOpacity = 1;
                     polaroid.outlineOpacity = 1;
                     polaroid.outlineColor = lyricsData.moodColor;
-                    polaroid.outlineOffsetX = "8%";
-                    polaroid.outlineOffsetY = "6%";
+
+                    const outlineAge = position - lyricsData.rawCharList[lastChar].startTime
+                    polaroid.outlineOpacity = 0.995 ** outlineAge;
 
                     // text movement (exaggerated, because it's smaller)
                     polaroid.fontSize = POLAROID_TEXT_SIZE * lyricsData.textScale ** 2;
@@ -996,16 +1000,13 @@ class ThreeManager {
                     // calculate how far behind the active polaroid this polaroid is
                     const relativeIndex = (((lastChar % POLAROID_COUNT - i) % POLAROID_COUNT) + POLAROID_COUNT) % POLAROID_COUNT // weird modulo to fix javascript bug
                     if (lastChar - relativeIndex >= 0) {
-                        const age = position - lyricsData.rawCharList[lastChar - relativeIndex].endTime;
+                        const fillAge = position - lyricsData.rawCharList[lastChar - relativeIndex].endTime;
                         polaroid.text = lyricsData.rawCharList[lastChar - relativeIndex]
 
                         // fade out polaroids age they age
-                        polaroid.fillOpacity = 0.995 ** age;
-                        polaroid.outlineOpacity = 0.995 ** age;
+                        polaroid.fillOpacity = 0.995 ** fillAge;
+                        polaroid.outlineOpacity = 0;
                     }
-
-                    polaroid.outlineOffsetX = "0%";
-                    polaroid.outlineOffsetY = "0%";
                 }
 
             }
@@ -1022,21 +1023,20 @@ class ThreeManager {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
-        this.updateBigLyrics();
-        this.updateFloatingChars();
-        this.updateNotebook();
-        this.updatePolaroids();
+        if (lyricsData.textLoaded) {
+            this.updateAllText();
+        }
 
         // calculate colors to update lighting based on valence/arousal values
         this.moodLight.color = lyricsData.moodColor;
-        this.bigLyrics.outlineColor = lyricsData.moodColor;
 
-        this.innerSky.rotation.y = -1 / 6000 * pos * this.skySpeed;
-
-        this.coloredSky.material.color = new THREE.Color().addColors(lyricsData.moodColor, new THREE.Color(0.2, 0.2, 0.2));
-        this.coloredSky.rotation.y = 1 / 6000 * pos * this.skySpeed;
-
-        this.outerSky.rotation.y = -1 / 8000 * pos * this.skySpeed;
+        // update sky rotation -- if it exists
+        if (this.innerSky && this.coloredSky && this.outerSky) {
+            this.innerSky.rotation.y = -1 / 6000 * pos * this.skySpeed;
+            this.coloredSky.material.color = new THREE.Color().addColors(lyricsData.moodColor, new THREE.Color(0.2, 0.2, 0.2));
+            this.coloredSky.rotation.y = 1 / 6000 * pos * this.skySpeed;
+            this.outerSky.rotation.y = -1 / 8000 * pos * this.skySpeed;
+        }
 
         // set camera movement modifier
         let movementDampener = 100 / this.camera.fov;
@@ -1063,6 +1063,33 @@ class ThreeManager {
 
         this.cameraControls.update(this.clock.getDelta())
         this.composer.render(this.scene, this.camera);
+    }
+
+    initAllText() {
+        return new Promise((resolve, reject) => {
+            try {
+                threeMng.textObjects.forEach((object => {
+                    threeMng.scene.remove(object);
+                    object.dispose();
+                }));
+
+                this.initBigLyrics();
+                this.initFloatingChars();
+                this.initNotebook();
+                this.initPolaroids();
+                lyricsData.textLoaded = true;
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    updateAllText() {
+        this.updateBigLyrics();
+        this.updateFloatingChars();
+        this.updateNotebook();
+        this.updatePolaroids();
     }
 
     resize() {
