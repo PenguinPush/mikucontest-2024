@@ -1,12 +1,12 @@
 // import necessary modules
-import {Player} from "textalive-app-api";
+const { Player } = TextAliveApp;
 import * as THREE from "three";
+import CameraControls from "https://cdn.jsdelivr.net/npm/camera-controls@2.8.5/+esm";
+import {Text} from "https://cdn.jsdelivr.net/npm/troika-three-text@0.49.1/+esm";
 
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js'
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Reflector} from 'three/addons/objects/Reflector.js';
-import {Text} from 'troika-three-text';
 import WebGL from "three/addons/capabilities/WebGL.js";
-import CameraControls from 'camera-controls';
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
 import {HalftonePass} from 'three/addons/postprocessing/HalftonePass.js';
@@ -29,7 +29,7 @@ import {
     songList,
     WINDOW,
     WINDOW_TEXT_SIZE,
-} from "./constants";
+} from "./constants.js";
 
 CameraControls.install({THREE: THREE});
 
@@ -869,8 +869,6 @@ class ThreeManager {
 
         this.notebookText.text = newText.join("");
         this.notebookText.sync();
-
-        console.log(newText)
     }
 
     update(pos) {
