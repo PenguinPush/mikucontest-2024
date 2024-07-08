@@ -863,7 +863,7 @@ class ThreeManager {
 
     updateNotebook() {
         if (lyricsData.sortedCharsList.length === 0) {
-            lyricsData.calculateNotebook()
+            lyricsData.calculateNotebook();
         }
 
         // Find the last character to be rendered
@@ -890,8 +890,10 @@ class ThreeManager {
             cnt += 1;
         }
 
-        this.notebookText.text = newText.join("");
-        this.notebookText.sync();
+        if (!(newText.length == 1 && newText[0] == "　")){
+            this.notebookText.text = newText.join("");
+            this.notebookText.sync();
+        }
     }
 
     update(pos) {
@@ -906,9 +908,11 @@ class ThreeManager {
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
-        // TODO: Do this in a better way
         if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
-            this.lyrics.text = "";
+            this.lyrics.visible = false;
+        }
+        else {
+            this.lyrics.visible = true;
         }
 
         this.lyrics.sync();
