@@ -14,7 +14,7 @@ import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 
 import {
     baseFov,
-    baseTextSize,
+    BASE_TEXT_SIZE,
     BEDROOM,
     cameraPositions,
     FULL_VIEW,
@@ -25,8 +25,11 @@ import {
     minFov,
     minTextScale,
     noShadows,
-    punctuation,
     NOTEBOOK_TEXT_SIZE,
+    POLAROID_COUNT,
+    polaroidPositions,
+    POLAROID_TEXT_SIZE,
+    punctuation,
     songList,
     WINDOW,
     WINDOW_TEXT_SIZE,
@@ -354,6 +357,11 @@ function onTimerReady(t) {
     progressGradient += ')';
 
     progressBar.style.background = progressGradient;
+
+    player.requestMediaSeek(0);
+    progressBar.value = 0;
+    position = 0;
+    player.endVideoSeek();
 }
 
 function onTimeUpdate(pos) {
@@ -411,8 +419,6 @@ function loadSong(value, isCustom) {
             customSong.disabled = true;
             lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
             lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
-            player.requestMediaSeek(0);
-            player.endVideoSeek();
         });
     } else { // fetch from piapro
         if (checkUrl(value)) {
@@ -420,8 +426,6 @@ function loadSong(value, isCustom) {
             player.createFromSongUrl(value).then(() => {
                 lyricsData.maxAmplitude = player.getMaxVocalAmplitude()
                 lyricsData.normalizeValenceArousal(player.getValenceArousal(0));
-                player.requestMediaSeek(0);
-                player.endVideoSeek();
             });
         } else {
             lyricsData.text = "invalid url";
@@ -467,9 +471,13 @@ function animateChar(pos, unit) {
             lyricsData.enIndex = 0
         }
 
-        lyricsData.char = unit.text;
         lyricsData.previousUnits.add(unit);
     }
+
+    if (unit.contains(pos)) {
+        lyricsData.char = unit.text;
+    }
+
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
 
@@ -529,6 +537,7 @@ class ThreeManager {
         this.initControls();
         this.initLyrics();
         this.initNotebook();
+        this.initPolaroids();
         this.initPostProcessing();
 
         this.renderer.shadowMap.needsUpdate = true;
@@ -538,16 +547,16 @@ class ThreeManager {
         this.cameraPosIndex -= 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
 
-        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+        this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     goRight() {
         this.cameraPosIndex += 1;
         this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
 
-        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+        this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     initScene() {
@@ -557,7 +566,6 @@ class ThreeManager {
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             const room = gltf.scene;
             let mirrorBase;
-            threeMng.polaroidPositions = [];
 
             // edit the bedroom
             room.traverse((item) => {
@@ -595,9 +603,10 @@ class ThreeManager {
                         threeMng.scene.add(mirror);
                     }
 
-                    if (item.material.name === "polaroid") {
-                        threeMng.polaroidPositions.push(item.position);
-                    }
+                    // if (item.material.name === "polaroid"){
+                    //     // log positions of the polaroids in the gltf
+                    //     console.log([Math.round(item.position.x * 1000)/1000, Math.round(item.position.y * 1000)/1000].join(", "))
+                    // }
                 }
 
                 if (item.name === "inner_sky") {
@@ -629,7 +638,6 @@ class ThreeManager {
                 }
             })
 
-            threeMng.polaroidPositions.sort(threeMng.compareVector3);
             mirrorBase.parent.remove(mirrorBase);
             threeMng.scene.add(room);
         })
@@ -742,23 +750,23 @@ class ThreeManager {
     }
 
     initLyrics() {
-        this.lyrics = new Text();
-        this.scene.add(this.lyrics);
+        this.bigLyrics = new Text();
+        this.scene.add(this.bigLyrics);
 
         // set properties for the text
-        this.lyrics.fontSize = baseTextSize;
-        this.lyrics.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+        this.bigLyrics.fontSize = BASE_TEXT_SIZE;
+        this.bigLyrics.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
 
-        this.lyrics.textAlign = "center"
-        this.lyrics.anchorX = "50%";
-        this.lyrics.anchorY = "50%";
-        this.lyrics.outlineOffsetX = "8%";
-        this.lyrics.outlineOffsetY = "6%";
-        this.lyrics.outlineColor = (0, 0, 0);
-        this.lyrics.sdfGlyphSize = 128;
+        this.bigLyrics.textAlign = "center"
+        this.bigLyrics.anchorX = "50%";
+        this.bigLyrics.anchorY = "50%";
+        this.bigLyrics.outlineOffsetX = "8%";
+        this.bigLyrics.outlineOffsetY = "6%";
+        this.bigLyrics.outlineColor = (0, 0, 0);
+        this.bigLyrics.sdfGlyphSize = 128;
 
-        this.lyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-        this.lyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+        this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
+        this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
     }
 
     initNotebook() {
@@ -777,12 +785,28 @@ class ThreeManager {
     initPolaroids() {
         this.polaroids = [];
 
-        for (let i = 0; i < this.polaroidPositions.length; i++) {
-            this.polaroids.push(new Text());
-            this.scene.add(this.polaroids[i]);
-        }
+        for (let i = 0; i < POLAROID_COUNT; i++) {
+            let polaroidText = new Text();
+            let position = polaroidPositions[i];
+            polaroidText.position.set(position[0], position[1], position[2]);
+            polaroidText.rotation.z = position[3];
 
-        console.log(this.polaroids);
+            polaroidText.fontSize = POLAROID_TEXT_SIZE;
+            polaroidText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+            polaroidText.text = ""
+
+            polaroidText.textAlign = "center"
+            polaroidText.anchorX = "50%";
+            polaroidText.anchorY = "50%";
+            polaroidText.outlineOffsetX = "8%";
+            polaroidText.outlineOffsetY = "6%";
+            polaroidText.outlineColor = (0, 0, 0);
+            polaroidText.sdfGlyphSize = 128;
+
+            polaroidText.sync();
+            this.scene.add(polaroidText);
+            this.polaroids.push(polaroidText);
+        }
     }
 
     initPostProcessing() {
@@ -811,7 +835,20 @@ class ThreeManager {
         this.composer.addPass(outputPass);
     }
 
-    // Draws all current floating characters
+    updateBigLyrics() {
+        if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
+            this.bigLyrics.visible = false;
+        } else {
+            this.bigLyrics.visible = true;
+            this.bigLyrics.text = lyricsData.word;
+            this.bigLyrics.fontSize = BASE_TEXT_SIZE * lyricsData.textScale;
+            this.bigLyrics.letterSpacing = lyricsData.stretch / 10;
+            this.bigLyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
+        }
+
+        this.bigLyrics.sync();
+    }
+
     updateFloatingChars() {
         for (let i = 0; i < lyricsData.floatingChars.length; i++) {
             let currChar = lyricsData.floatingChars[i];
@@ -890,36 +927,75 @@ class ThreeManager {
             cnt += 1;
         }
 
-        if (!(newText.length == 1 && newText[0] == "　")){
+        if (!(newText.length === 1 && newText[0] === "　")) {
             this.notebookText.text = newText.join("");
             this.notebookText.sync();
         }
+    }
+
+    updatePolaroids() {
+        let lastChar = lyricsData.rawCharList.length - 1;
+        for (let i = 0; i < lyricsData.rawCharList.length; i++) {
+            if (lyricsData.rawCharList[i]._data.startTime > player.videoPosition) {
+                lastChar = i - 1;
+                while (lyricsData.rawCharList[lastChar] === "　") {
+                    lastChar -= 1;
+                }
+                break;
+            }
+        }
+
+        this.polaroids.forEach((polaroid, i) => {
+            if (lyricsData.rawCharList[lastChar]) {
+                if (lastChar % POLAROID_COUNT === i) {
+                    polaroid.text = lyricsData.rawCharList[lastChar].text;
+                    polaroid.fillOpacity = 1;
+                    polaroid.outlineOpacity = 1;
+                    polaroid.outlineColor = lyricsData.moodColor;
+                    polaroid.outlineOffsetX = "8%";
+                    polaroid.outlineOffsetY = "6%";
+
+                    // text movement (exaggerated, because it's smaller)
+                    polaroid.fontSize = POLAROID_TEXT_SIZE * lyricsData.textScale ** 2;
+                    polaroid.scale.set(1 + lyricsData.stretch / 5, 1 - lyricsData.stretch / 5);
+                } else {
+                    // calculate how far behind the active polaroid this polaroid is
+                    const relativeIndex = (((lastChar % POLAROID_COUNT - i) % POLAROID_COUNT) + POLAROID_COUNT) % POLAROID_COUNT // weird modulo to fix javascript bug
+                    if (lastChar - relativeIndex >= 0) {
+                        const age = position - lyricsData.rawCharList[lastChar - relativeIndex].endTime;
+                        polaroid.text = lyricsData.rawCharList[lastChar - relativeIndex]
+
+                        // fade out polaroids age they age
+                        polaroid.fillOpacity = 0.995 ** age;
+                        polaroid.outlineOpacity = 0.995 ** age;
+                    }
+
+                    polaroid.outlineOffsetX = "0%";
+                    polaroid.outlineOffsetY = "0%";
+                }
+
+            }
+
+            if (lastChar === -1) {
+                polaroid.text = "";
+            }
+
+            polaroid.sync();
+        })
     }
 
     update(pos) {
         let cameraPos = cameraPositions[this.cameraPosIndex].pos
         let cameraRot = cameraPositions[this.cameraPosIndex].rot
 
+        this.updateBigLyrics();
         this.updateFloatingChars();
         this.updateNotebook();
-
-        // update lyrics
-        this.lyrics.text = lyricsData.word;
-        this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
-        this.lyrics.letterSpacing = lyricsData.stretch / 10;
-        this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
-        if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
-            this.lyrics.visible = false;
-        }
-        else {
-            this.lyrics.visible = true;
-        }
-
-        this.lyrics.sync();
+        this.updatePolaroids();
 
         // calculate colors to update lighting based on valence/arousal values
         this.moodLight.color = lyricsData.moodColor;
-        this.lyrics.outlineColor = lyricsData.moodColor;
+        this.bigLyrics.outlineColor = lyricsData.moodColor;
 
         this.innerSky.rotation.y = -1 / 6000 * pos * this.skySpeed;
 
@@ -965,15 +1041,6 @@ class ThreeManager {
 
         this.camera.updateProjectionMatrix();
         this.update()
-    }
-
-    compareVector3(a, b) {
-        if (a.x < b.x) {
-            return -1;
-        } else if (a.x > b.x) {
-            return 1;
-        }
-        return 0;
     }
 
 }

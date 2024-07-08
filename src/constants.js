@@ -1,7 +1,7 @@
 // constants
 export const maxTextScale = 1.1;
 export const minTextScale = 0.9;
-export const baseTextSize = 0.6;
+export const BASE_TEXT_SIZE = 0.6;
 export const baseFov = 60;
 export const minFov = 60;
 export const maxFov = 90;
@@ -47,11 +47,17 @@ export const cameraPositions = [
     },
 
     { // table
-        pos: [4.8, 1.2, -1.1],
+        pos: [4.76, 1.2, -1.1],
         rot: [0, Math.PI / 2],
         text: [2.71, -10, -0.04]
     },
 ]
+export const polaroidPositions = [[4.43, 1.224, -2.19, -0.23366703581932333],
+    [4.55, 1.197, -2.19, -0.11524726739489498],
+    [4.695, 1.19, -2.19, 0],
+    [4.831, 1.203, -2.19, 0.06181630125869426],
+    [4.945, 1.23, -2.19, 0.1286658631629116],
+    [5.056, 1.272, -2.19, 0.22665441714058376]]
 export const noShadows = ["polaroidline", "line", "MikuAcrylic"]
 export const punctuation = ["'", '"', '“', '”', "‘", "’", "(", ")", "!", "?", "%", "/", "*", "•", "$", "#", "@", "-", ":"]
 export const BEDROOM = 0;
@@ -59,8 +65,10 @@ export const WINDOW = 1;
 export const TV = 2;
 export const NOTEBOOK = 3;
 export const FULL_VIEW = 4;
-export const WINDOW_TEXT_SIZE = baseTextSize / 3;
+export const WINDOW_TEXT_SIZE = BASE_TEXT_SIZE / 3;
 export const MAX_CHARS_PER_LINE = 11;
 export const MAX_LINES = 9;
-export const NOTEBOOK_TEXT_SIZE = baseTextSize / 12;
+export const NOTEBOOK_TEXT_SIZE = BASE_TEXT_SIZE / 12;
+export const POLAROID_TEXT_SIZE = BASE_TEXT_SIZE / 12;
+export const POLAROID_COUNT = 6;
 
