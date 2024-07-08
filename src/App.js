@@ -852,6 +852,9 @@ class ThreeManager {
         for (let i = 0; i < lyricsData.sortedCharsList.length; i++) {
             if (lyricsData.sortedCharsList[i]._data.startTime > player.videoPosition) {
                 lastChar = i - 1;
+                while (sortedCharsList[lastChar] == "　") {
+                    lastChar -= 1;
+                }
                 break;
             }
         }
