@@ -1,8 +1,11 @@
-# React + Vite
+# mikucontest-2024
+seKAIIIII
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Authors
 
-Currently, two official plugins are available:
+- [@PenguinPush](https://www.github.com/PenguinPush)
+- [@PenguinPush](https://www.github.com/PenguinPush)
+- [@PenguinPush](https://www.github.com/PenguinPush)
+## Acknowledgements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+ - "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
