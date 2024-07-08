@@ -25,6 +25,7 @@ import {
     minFov,
     minTextScale,
     noShadows,
+    punctuation,
     NOTEBOOK_TEXT_SIZE,
     songList,
     WINDOW,
@@ -104,15 +105,18 @@ class LyricsData {
         for (let i = 0; i < this.rawCharList.length; i++) {
             this.sortedCharsList.push(this.rawCharList[i]);
             if (this.rawCharList[i].parent.language === "en") {
-                if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !this.rawCharList[i].parent.next.rawPos.includes("S")) {
-                    this.sortedCharsList.push({
-                            _data: {
-                                startTime: this.rawCharList[i]._data.startTime,
-                            },
-                            text: "　"
-                        }
-                    );
+                if (this.rawCharList[i].parent.next) {
+                    if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !punctuation.includes(this.rawCharList[i].parent.next.text)) {
+                        this.sortedCharsList.push({
+                                _data: {
+                                    startTime: this.rawCharList[i]._data.startTime,
+                                },
+                                text: "　"
+                            }
+                        );
+                    }
                 }
+
             } else {
                 if (this.rawCharList[i].parent.parent.lastChar === this.rawCharList[i]) {
                     this.sortedCharsList.push({
@@ -125,7 +129,6 @@ class LyricsData {
                 }
             }
         }
-        console.log(this.sortedCharsList)
     }
 }
 
@@ -466,7 +469,6 @@ function animateChar(pos, unit) {
 
         lyricsData.char = unit.text;
         lyricsData.previousUnits.add(unit);
-        console.log(lyricsData.previousUnits.size)
     }
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
@@ -555,6 +557,7 @@ class ThreeManager {
         loader.load("src/assets/models/bedroom_base.glb", function (gltf) {
             const room = gltf.scene;
             let mirrorBase;
+            threeMng.polaroidPositions = [];
 
             // edit the bedroom
             room.traverse((item) => {
@@ -591,6 +594,10 @@ class ThreeManager {
                         mirrorBase = item;
                         threeMng.scene.add(mirror);
                     }
+
+                    if (item.material.name === "polaroid") {
+                        threeMng.polaroidPositions.push(item.position);
+                    }
                 }
 
                 if (item.name === "inner_sky") {
@@ -622,6 +629,7 @@ class ThreeManager {
                 }
             })
 
+            threeMng.polaroidPositions.sort(threeMng.compareVector3);
             mirrorBase.parent.remove(mirrorBase);
             threeMng.scene.add(room);
         })
@@ -766,6 +774,17 @@ class ThreeManager {
         this.notebookText.rotation.z = 16 * Math.PI / 31;
     }
 
+    initPolaroids() {
+        this.polaroids = [];
+
+        for (let i = 0; i < this.polaroidPositions.length; i++) {
+            this.polaroids.push(new Text());
+            this.scene.add(this.polaroids[i]);
+        }
+
+        console.log(this.polaroids);
+    }
+
     initPostProcessing() {
         this.composer = new EffectComposer(this.renderer);
 
@@ -819,7 +838,7 @@ class ThreeManager {
                 currChar.object = charObject;
             }
 
-            if (this.cameraPosIndex === WINDOW || this.cameraPosIndex === FULL_VIEW) {
+            if (this.cameraPosIndex === WINDOW) {
                 // only calculate for the positions  where you can see the window
                 currChar.object.visible = true;
                 if (0 < currChar.currentPosition[0] < 3.5) {
@@ -943,6 +962,16 @@ class ThreeManager {
         this.camera.updateProjectionMatrix();
         this.update()
     }
+
+    compareVector3(a, b) {
+        if (a.x < b.x) {
+            return -1;
+        } else if (a.x > b.x) {
+            return 1;
+        }
+        return 0;
+    }
+
 }
 
 initMain();

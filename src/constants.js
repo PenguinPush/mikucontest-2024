@@ -21,19 +21,21 @@ export const cameraPositions = [
         rot: [Math.PI / 3, Math.PI / 2],
         text: [2.71, 1.3, -0.04]
     },
+
     { // Window
         pos: [1.85, 1.2, 0.7],
         rot: [Math.PI, Math.PI / 2],
         text: [2.71, -10, -0.04]
     },
+
     { // TV
-        pos: [2.2, 1.07, -0.1],
+        pos: [2.2, 1.07, -0.5],
         rot: [Math.PI / 2, Math.PI / 2],
         text: [2.71, -10, -0.04]
     },
 
     { // Coffee Table
-        pos: [2.2, 1.07, -0.1],
+        pos: [2.2, 1.07, -0.05],
         rot: [Math.PI / 2, Math.PI / 6],
         text: [2.71, -10, -0.04]
     },
@@ -50,9 +52,8 @@ export const cameraPositions = [
         text: [2.71, -10, -0.04]
     },
 ]
-
 export const noShadows = ["polaroidline", "line", "MikuAcrylic"]
-
+export const punctuation = ["'", '"', '“', '”', "‘", "’", "(", ")", "!", "?", "%", "/", "*", "•", "$", "#", "@", "-", ":"]
 export const BEDROOM = 0;
 export const WINDOW = 1;
 export const TV = 2;
