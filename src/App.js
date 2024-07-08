@@ -1,5 +1,5 @@
 // import necessary modules
-const { Player } = TextAliveApp;
+const {Player} = TextAliveApp;
 import * as THREE from "three";
 import CameraControls from "https://cdn.jsdelivr.net/npm/camera-controls@2.8.5/+esm";
 import {Text} from "https://cdn.jsdelivr.net/npm/troika-three-text@0.49.1/+esm";
@@ -177,7 +177,7 @@ function _initPlayer() {
     });
 
     player.addListener({
-        onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onLyricsLoad, onPlay, onPause, onStop,
+        onAppReady, onVideoReady, onTimerReady, onTimeUpdate, onPlay, onPause, onStop,
     });
     player.fps = 60;
 }
@@ -362,10 +362,6 @@ function onTimeUpdate(pos) {
     }
 }
 
-function onLyricsLoad(){
-    lyricsData.calculateNotebook()
-}
-
 function onPlay() {
     playBtn.style.display = "none"
     pauseBtn.style.display = "inline" // toggle button to pause
@@ -470,6 +466,7 @@ function animateChar(pos, unit) {
 
         lyricsData.char = unit.text;
         lyricsData.previousUnits.add(unit);
+        console.log(lyricsData.previousUnits.size)
     }
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
@@ -629,7 +626,7 @@ class ThreeManager {
             threeMng.scene.add(room);
         })
 
-        const light = new THREE.PointLight(0xffe7d0, 5, 0, 1);
+        const light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
         light.position.set(2.93, 2.08, 0);
         light.castShadow = true;
         light.shadow.mapSize.width = 2048;
@@ -846,6 +843,10 @@ class ThreeManager {
     }
 
     updateNotebook() {
+        if (lyricsData.sortedCharsList.length === 0) {
+            lyricsData.calculateNotebook()
+        }
+
         // Find the last character to be rendered
         let lastChar = lyricsData.sortedCharsList.length - 1;
         for (let i = 0; i < lyricsData.sortedCharsList.length; i++) {
