@@ -104,7 +104,7 @@ class LyricsData {
         for (let i = 0; i < this.rawCharList.length; i++) {
             this.sortedCharsList.push(this.rawCharList[i]);
             if (this.rawCharList[i].parent.language === "en") {
-                if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !this.rawCharList[i].parent.rawPos.includes("S")) {
+                if (this.rawCharList[i].parent.lastChar === this.rawCharList[i] && !this.rawCharList[i].parent.next.rawPos.includes("S")) {
                     this.sortedCharsList.push({
                             _data: {
                                 startTime: this.rawCharList[i]._data.startTime,
