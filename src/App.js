@@ -887,9 +887,11 @@ class ThreeManager {
         this.lyrics.fontSize = baseTextSize * lyricsData.textScale;
         this.lyrics.letterSpacing = lyricsData.stretch / 10;
         this.lyrics.scale.set(1 + (lyricsData.stretch) ** 3, 1 - (lyricsData.stretch) ** 3);
-        // TODO: Do this in a better way
         if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
-            this.lyrics.text = "";
+            this.lyrics.visible = false;
+        }
+        else {
+            this.lyrics.visible = true;
         }
 
         this.lyrics.sync();
