@@ -125,7 +125,6 @@ class LyricsData {
                 }
             }
         }
-        console.log(this.sortedCharsList)
     }
 }
 
@@ -466,7 +465,6 @@ function animateChar(pos, unit) {
 
         lyricsData.char = unit.text;
         lyricsData.previousUnits.add(unit);
-        console.log(lyricsData.previousUnits.size)
     }
     lyricsData.update(player.getVocalAmplitude(pos), player.getValenceArousal(pos))
 }
@@ -844,7 +842,7 @@ class ThreeManager {
 
     updateNotebook() {
         if (lyricsData.sortedCharsList.length === 0) {
-            lyricsData.calculateNotebook()
+            lyricsData.calculateNotebook();
         }
 
         // Find the last character to be rendered
@@ -871,8 +869,10 @@ class ThreeManager {
             cnt += 1;
         }
 
-        this.notebookText.text = newText.join("");
-        this.notebookText.sync();
+        if (!(newText.length == 1 && newText[0] == "　")){
+            this.notebookText.text = newText.join("");
+            this.notebookText.sync();
+        }
     }
 
     update(pos) {
