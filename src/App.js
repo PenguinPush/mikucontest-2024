@@ -829,6 +829,8 @@ class ThreeManager {
         this.textObjects.push(this.notebookText);
 
         this.notebookText.fontSize = NOTEBOOK_TEXT_SIZE;
+        this.notebookText.lineHeight = 1.02;
+        this.notebookText.color = (0, 0, 0);
         this.notebookText.font = "src/assets/fonts/Yomogi-Regular.ttf"
 
         this.notebookText.sdfGlyphSize = lyricsData.glyphSize;

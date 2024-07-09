@@ -66,9 +66,9 @@ export const TV = 2;
 export const NOTEBOOK = 3;
 export const FULL_VIEW = 4;
 export const WINDOW_TEXT_SIZE = BASE_TEXT_SIZE / 3;
-export const MAX_CHARS_PER_LINE = 11;
-export const MAX_LINES = 9;
-export const NOTEBOOK_TEXT_SIZE = BASE_TEXT_SIZE / 12;
+export const MAX_CHARS_PER_LINE = 9;
+export const MAX_LINES = 15;
+export const NOTEBOOK_TEXT_SIZE = BASE_TEXT_SIZE / 20;
 export const POLAROID_TEXT_SIZE = BASE_TEXT_SIZE / 12;
 export const POLAROID_COUNT = 6;
 
