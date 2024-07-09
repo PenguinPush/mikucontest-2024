@@ -1,4 +1,4 @@
-<img src="./src/assets/logo.png" style="width: 100%" />
+<img src="./src/assets/buttons/icon.png" style="width: 100%" />
 
 [![jp](https://img.shields.io/badge/lang-jp-red.svg)](https://github.com/PenguinPush/mikucontest-2024/blob/main/README-jp.md)
 

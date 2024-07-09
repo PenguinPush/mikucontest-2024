@@ -216,7 +216,7 @@ function onAppReady(app) {
     });
 
     graphics.addEventListener("change", () => {
-        if (graphics.checked) {
+        if (!graphics.checked) {
             App.threeMng.renderer.shadowMap.enabled = false;
 
             App.threeMng.mirrorBase.visible = true;
@@ -267,11 +267,11 @@ function onAppReady(app) {
 
     language.addEventListener("change", () => {
         if (language.checked) {
-            document.querySelector("label[for='graphics']").textContent = "低グラフィックス";
+            document.querySelector("label[for='graphics']").textContent = "ハイグラフィックス";
             document.querySelector("label[for='accessibility']").textContent = "動きを減らす";
             credits.textContent = "制作";
         } else {
-            document.querySelector("label[for='graphics']").textContent = "Low Graphics";
+            document.querySelector("label[for='graphics']").textContent = "High Graphics";
             document.querySelector("label[for='accessibility']").textContent = "Reduce Motion";
             credits.textContent = "Credits";
         }

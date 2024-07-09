@@ -400,8 +400,8 @@ body {
 }
 
 #language + label {
-    background-image: url("assets/buttons/flag_en.png");
-    background-color: #ffffff;
+    background-image: url("assets/buttons/flag_jp.png");
+    background-color: #444461;
 
     position: absolute;
     right: 8px;
@@ -410,8 +410,8 @@ body {
 }
 
 #language:checked + label {
-    background-image: url("assets/buttons/flag_jp.png");
-    background-color: #444461;
+    background-image: url("assets/buttons/flag_en.png");
+    background-color: #ffffff;
 }
 
 #credits {

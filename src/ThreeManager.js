@@ -339,31 +339,6 @@ export class ThreeManager {
         }
     }
 
-    getLastChar(li) {
-        // Binary Search the last character to be rendered
-        let left = 0;
-        let right = li.length - 1;
-
-        let lastChar = right;
-
-        while (left <= right) {
-            let mid = Math.floor((right + left) / 2);
-            if (li[mid]._data.startTime > this.app.player.videoPosition) {
-                right = mid - 1;
-                lastChar = mid;
-            } else {
-                left = mid + 1;
-            }
-        }
-
-        lastChar -= 1;
-        while (li[lastChar] === "　") {
-            lastChar -= 1;
-        }
-
-        return lastChar;
-    }
-
     updateNotebook() {
         if (this.app.lyricsData.sortedCharsList.length === 0) {
             this.app.lyricsData.calculateNotebook();
@@ -486,6 +461,31 @@ export class ThreeManager {
         this.updateFloatingChars();
         this.updateNotebook();
         this.updatePolaroids();
+    }
+
+    getLastChar(li) {
+        // Binary Search the last character to be rendered
+        let left = 0;
+        let right = li.length - 1;
+
+        let lastChar = right;
+
+        while (left <= right) {
+            let mid = Math.floor((right + left) / 2);
+            if (li[mid]._data.startTime > this.app.player.videoPosition) {
+                right = mid - 1;
+                lastChar = mid;
+            } else {
+                left = mid + 1;
+            }
+        }
+
+        lastChar -= 1;
+        while (li[lastChar] === "　") {
+            lastChar -= 1;
+        }
+
+        return lastChar;
     }
 
     resize() {

@@ -35,7 +35,7 @@ export const cameraPositions = [
     },
 
     { // Coffee Table
-        pos: [2.2, 1.07, -0.05],
+        pos: [2.4, 1.07, -0.05],
         rot: [Math.PI / 2, Math.PI / 6],
         text: [2.71, -10, -0.04]
     },

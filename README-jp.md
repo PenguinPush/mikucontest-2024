@@ -1,4 +1,4 @@
-<img src="./src/assets/logo.png" style="width: 100%" />
+<img src="./src/assets/buttons/icon.png" style="width: 100%" />
 
 Title: Vivid Room <br><br>
 Supported Songs:
