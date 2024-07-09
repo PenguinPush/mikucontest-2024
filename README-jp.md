@@ -1,6 +1,6 @@
 <img src="./src/assets/buttons/icon.png" style="width: 100%" />
 
-Title: Vivid Room <br><br>
+Title: Vivid Bedroom <br><br>
 Supported Songs:
 - SUPERHERO
 - いつか君と話したミライは
@@ -12,11 +12,11 @@ Supported Songs:
 ## Overview
 
 <p>
+6曲の中から1曲を選び、音楽に合わせて歌詞が表示される初音ミクファンのベッドルームを探検しよう。
+矢印やボタン（デバイスによって異なる）をクリックすることで、視点を変えてベッドルームのさまざまな場所を探索し、テキストの表示方法をすべて体験することができます。
 
-初音ミク2024マジカルミライコーディングコンペティションのバーチャル音楽環境を表示するアプリを制作しました。このアプリでは、マジカルミライ2024の音楽を楽しみながら、ミクファンの寝室を探検することができます。
-
-横の矢印をクリックすることで、視点を変えて寝室の様々な場所を探索することができ、部屋の要素に合わせて音楽が流れます。
-
+このプロジェクトで私たちは、家でのんびり過ごす夏の日、何もせずに部屋でゴロゴロする日の、かわいくて居心地の良い感覚を表現しようとしました。これが成功したことを願っています。
+カナダ出身の長年の初音ミク・ファンとして、世界中から作品を応募できる機会に感謝しています。この作品を私たちと同じように楽しんでいただければ幸いです！
 </p>
 
 ## Notes
@@ -33,4 +33,3 @@ Supported Songs:
 ## Acknowledgements
 
  - "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
- - "Hatsune Miku Fumo" (https://shorturl.at/GsUjT) is supplied by _Kassjak_ under a Free Standard license (https://sketchfab.com/licenses)
