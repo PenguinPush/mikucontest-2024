@@ -65,6 +65,12 @@ export class LyricsData {
         } else {
             this.moodColor = new THREE.Color(1, 1, 1);
         }
+
+        if (!this.stretch || !this.textScale || !this.textScaleDelta) {
+            this.textScale = 1;
+            this.textScaleDelta = 1;
+            this.stretch = 0;
+        }
     }
 
     normalizeValenceArousal(valenceArousal) {
