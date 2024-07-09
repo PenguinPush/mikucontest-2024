@@ -65,12 +65,6 @@ export class ThreeManager {
 
             // edit the bedroom
             room.traverse(function (item) {
-                if (item.isMesh) {
-                    // enable shadows
-                    // item.castShadow = true;
-                    // item.receiveShadow = true;
-                }
-
                 if (item instanceof THREE.Light) {
                     // disable blender lights, they don't translate well
                     item.intensity = 0;
@@ -114,9 +108,6 @@ export class ThreeManager {
                     item.material.blending = THREE.AdditiveBlending;
                     item.material.opacity = 0.2;
 
-                    item.castShadow = false;
-                    item.receiveShadow = false;
-
                     this.innerSky = item;
                 }
 
@@ -124,15 +115,10 @@ export class ThreeManager {
                     item.material.color = new THREE.Color(0, 0, 0);
                     item.material.opacity = 0.8;
 
-                    item.castShadow = false;
-                    item.receiveShadow = false;
-
                     this.coloredSky = item;
                 }
 
                 if (item.name === "outer_sky") {
-                    item.castShadow = false;
-                    item.receiveShadow = false;
 
                     this.outerSky = item;
                 }
@@ -144,9 +130,9 @@ export class ThreeManager {
         this.light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
         this.light.position.set(2.93, 2.08, 0);
         this.light.castShadow = true;
-        this.light.shadow.mapSize.width = 128;
-        this.light.shadow.mapSize.height = 128;
-        this.light.shadow.radius = 2;
+        this.light.shadow.mapSize.width = 256;
+        this.light.shadow.mapSize.height = 256;
+        this.light.shadow.radius = 5;
         this.light.shadow.blurSamples = 25;
         this.light.shadow.bias = -0.0001;
         this.light.shadow.camera.near = 0.1;
@@ -155,9 +141,9 @@ export class ThreeManager {
         this.lamp = new THREE.PointLight(0xffe7d0, 1, 0, 1);
         this.lamp.position.set(4, 1.2, -1.6);
         this.lamp.castShadow = true;
-        this.lamp.shadow.mapSize.width = 128;
-        this.lamp.shadow.mapSize.height = 128;
-        this.lamp.shadow.radius = 2;
+        this.lamp.shadow.mapSize.width = 256;
+        this.lamp.shadow.mapSize.height = 256;
+        this.lamp.shadow.radius = 5;
         this.lamp.shadow.blurSamples = 25;
         this.lamp.shadow.bias = -0.0001;
         this.lamp.shadow.camera.near = 0.1;
@@ -174,8 +160,6 @@ export class ThreeManager {
         this.scene.add(this.moodLight);
         this.scene.add(ambientLight);
     }
-
-    
 
     initControls() {
         this.inputX = 0;
@@ -385,20 +369,19 @@ export class ThreeManager {
         }
     }
 
-    getLastChar(li){
+    getLastChar(li) {
         // Binary Search the last character to be rendered
         let left = 0;
         let right = li.length - 1;
 
         let lastChar = right;
 
-        while (left <= right){
+        while (left <= right) {
             let mid = Math.floor((right + left) / 2);
-            if (li[mid]._data.startTime > this.app.player.videoPosition){
+            if (li[mid]._data.startTime > this.app.player.videoPosition) {
                 right = mid - 1;
                 lastChar = mid;
-            }
-            else {
+            } else {
                 left = mid + 1;
             }
         }
@@ -438,7 +421,6 @@ export class ThreeManager {
 
     updatePolaroids() {
         let lastChar = this.getLastChar(this.app.lyricsData.rawCharList);
-        console.log(this.app.lyricsData.rawCharList);
         this.polaroids.forEach((polaroid, i) => {
             if (this.app.lyricsData.rawCharList[lastChar]) {
                 if (lastChar % POLAROID_COUNT === i) {
@@ -524,7 +506,7 @@ export class ThreeManager {
                 this.initFloatingChars();
                 this.initNotebook();
                 this.initPolaroids();
-                
+
                 resolve(this.app.lyricsData.textLoaded = true);
             } catch (error) {
                 reject(error);

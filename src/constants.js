@@ -58,7 +58,7 @@ export const polaroidPositions = [[4.43, 1.224, -2.19, -0.23366703581932333],
     [4.831, 1.203, -2.19, 0.06181630125869426],
     [4.945, 1.23, -2.19, 0.1286658631629116],
     [5.056, 1.272, -2.19, 0.22665441714058376]]
-export const noShadows = ["polaroidline", "line", "MikuAcrylic"]
+export const noShadows = ["polaroidline", "line", "MikuAcrylic", "inner sky", "colored sky", "outer sky"]
 export const punctuation = ["'", '"', '“', '”', "‘", "’", "(", ")", "!", "?", "%", "/", "*", "•", "$", "#", "@", "-", ":"]
 export const BEDROOM = 0;
 export const WINDOW = 1;

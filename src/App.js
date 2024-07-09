@@ -25,7 +25,7 @@ const language = document.querySelector("#language");
 const credits = document.querySelector("#credits");
 
 class AppManager {
-    constructor(){
+    constructor() {
         this.lyricsData = new LyricsData(this);
         this.threeMng = new ThreeManager(this);
         this.position = 0;
@@ -53,7 +53,7 @@ class AppManager {
         }
         this._initPlayer();
     }
-    
+
     // initialize textalive player
     _initPlayer() {
         this.player.addListener({
@@ -66,20 +66,20 @@ class AppManager {
         // song loading system
         this.player.video && this.player.requestPause();
         this.player.volume = volumeSlider.value
-    
+
         for (let i = 0; i < this.lyricsData.floatingChars.length; i++) {
             this.threeMng.scene.remove(this.lyricsData.floatingChars[i].object)
         }
-    
+
         // initialize lyrics data
         this.lyricsData = new LyricsData()
-    
+
         // reset ui
         progressBar.style.background = "repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%)";
         document
             .querySelectorAll(".textalive-control")
             .forEach((item) => (item.disabled = true));
-    
+
         if (!isCustom) {
             this.player.createFromSongUrl(songList[value][0], { // fetch from constants
                 video: {
@@ -103,43 +103,43 @@ class AppManager {
                 });
             } else {
                 this.lyricsData.text = "invalid url";
-    
+
                 document
                     .querySelectorAll(".textalive-control")
                     .forEach((item) => (item.disabled = false));
             }
         }
     }
-    
+
     animateChar(pos, unit) {
         if (unit.contains(pos)) {
             this.lyricsData.char = unit.text;
         }
-    
+
         this.lyricsData.update(this.player.getVocalAmplitude(pos), this.player.getValenceArousal(pos))
     }
-    
+
     animateWord(pos, unit) {
         if (unit.contains(pos)) {
             this.lyricsData.word = unit.text;
         }
         this.lyricsData.update(this.player.getVocalAmplitude(pos), this.player.getValenceArousal(pos))
     }
-    
+
     animatePhrase(pos, unit) {
         if (unit.contains(pos)) {
             this.lyricsData.phrase = unit.text;
         }
         this.lyricsData.update(this.player.getVocalAmplitude(pos), this.player.getValenceArousal(pos))
     }
-    
+
     update() {
         if (this.threeMng.ready) {
             this.threeMng.update(this.position);
         }
         window.requestAnimationFrame(() => this.update());
     }
-    
+
     checkUrl(urlString) {
         try {
             return Boolean(new URL(urlString));
@@ -202,14 +202,14 @@ function onAppReady(app) {
     accessibility.addEventListener("change", () => {
         if (App.threeMng) {
             if (accessibility.checked) {
-                App.threeMng.movementStrength = 0;
-                App.threeMng.rotateStrength = 1 / 24;
-                App.threeMng.cameraControls.smoothTime = 0.1;
+                App.threeMng.camera.movementStrength = 0;
+                App.threeMng.camera.rotateStrength = 1 / 24;
+                App.threeMng.camera.cameraControls.smoothTime = 0.1;
                 App.threeMng.skySpeed = 0.1;
             } else {
-                App.threeMng.movementStrength = 1 / 10;
-                App.threeMng.rotateStrength = 1 / 12;
-                App.threeMng.cameraControls.smoothTime = 0.25;
+                App.threeMng.camera.movementStrength = 1 / 10;
+                App.threeMng.camera.rotateStrength = 1 / 12;
+                App.threeMng.camera.cameraControls.smoothTime = 0.25;
                 App.threeMng.skySpeed = 1;
             }
         }
@@ -217,16 +217,17 @@ function onAppReady(app) {
 
     graphics.addEventListener("change", () => {
         if (graphics.checked) {
-            App.threeMng.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            App.threeMng.light.shadow.mapSize.width = 128;
-            App.threeMng.light.shadow.mapSize.height = 128;
-            App.threeMng.lamp.shadow.mapSize.width = 128;
-            App.threeMng.lamp.shadow.mapSize.height = 128;
-            App.threeMng.light.shadow.radius = 2;
-            App.threeMng.lamp.shadow.radius = 2;
+            App.threeMng.renderer.shadowMap.enabled = false;
 
             App.threeMng.mirrorBase.visible = true;
             App.threeMng.mirrorReflector.visible = false;
+
+            App.threeMng.scene.traverse((object) => {
+                if (object.isMesh) {
+                    object.castShadow = false;
+                    object.receiveShadow = false;
+                }
+            });
 
             App.lyricsData.glyphSize = 32;
             App.threeMng.textObjects.forEach((object => {
@@ -235,13 +236,15 @@ function onAppReady(app) {
             }));
 
         } else {
-            App.threeMng.renderer.shadowMap.type = THREE.VSMShadowMap;
-            App.threeMng.light.shadow.mapSize.width = 512;
-            App.threeMng.light.shadow.mapSize.height = 512;
-            App.threeMng.lamp.shadow.mapSize.width = 512;
-            App.threeMng.lamp.shadow.mapSize.height = 512;
-            App.threeMng.light.shadow.radius = 5;
-            App.threeMng.lamp.shadow.radius = 5;
+            App.threeMng.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            App.threeMng.renderer.shadowMap.enabled = true;
+
+            App.threeMng.scene.traverse((object) => {
+                if (object.isMesh && object !== App.threeMng.bigLyrics && !App.lyricsData.floatingChars.includes(object)) {
+                    object.castShadow = true;
+                    object.receiveShadow = true;
+                }
+            });
 
             App.threeMng.mirrorBase.visible = false;
             App.threeMng.mirrorReflector.visible = true;
