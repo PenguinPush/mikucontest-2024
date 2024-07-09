@@ -11,7 +11,6 @@ import {
 export class LyricsData {
     constructor(app) {
         this.app = app;
-        this.char = "";
         this.word = "";
         this.phrase = "";
         this.text = "";

@@ -349,7 +349,7 @@ body {
     justify-content: flex-start;
     align-items: center;
     gap: 8px;
-    padding: 8px;
+    padding: 16px;
     margin-bottom: 8px;
 
     opacity: 0;

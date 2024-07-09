@@ -21,6 +21,7 @@ import {
     POLAROID_TEXT_SIZE,
     WINDOW,
     WINDOW_TEXT_SIZE,
+    songList
 } from "./constants.js";
 
 // everything 3d
@@ -42,6 +43,7 @@ export class ThreeManager {
         this.innerSky = null;
         this.coloredSky = null;
         this.outerSky = null;
+        this.newsTitle = null;
 
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -91,6 +93,10 @@ export class ThreeManager {
                         this.mirrorReflector.visible = false;
 
                         this.scene.add(this.mirrorReflector);
+                    }
+
+                    if (item.material.name === "news color") {
+                        this.newsTitle = item;
                     }
 
                     // if (item.material.name === "polaroid"){
@@ -254,6 +260,62 @@ export class ThreeManager {
         }
     }
 
+    initTv() {
+        let songTitle = new Text();
+        this.scene.add(songTitle);
+        this.textObjects.push(songTitle);
+
+        songTitle.fontSize = 0.05;
+        songTitle.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+
+        songTitle.textAlign = "left"
+        songTitle.anchorX = "0%";
+        songTitle.anchorY = "50%";
+        songTitle.sdfGlyphSize = this.app.lyricsData.glyphSize;
+        songTitle.text = songList[this.app.songId][6];
+
+        songTitle.position.set(0.29, 0.937, 0.52);
+        songTitle.rotation.y = Math.PI / 2;
+        songTitle.sync();
+
+        this.timeStamp = new Text();
+        this.scene.add(this.timeStamp);
+        this.textObjects.push(this.timeStamp);
+
+        this.timeStamp.fontSize = 0.04;
+        this.timeStamp.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+
+        this.timeStamp.textAlign = "right"
+        this.timeStamp.anchorX = "50%";
+        this.timeStamp.anchorY = "50%";
+
+        this.timeStamp.sdfGlyphSize = this.app.lyricsData.glyphSize;
+        this.timeStamp.text = "0:00";
+
+        this.timeStamp.position.set(0.29, 0.937, 0.6);
+        this.timeStamp.rotation.y = Math.PI / 2;
+        this.timeStamp.sync();
+
+        this.tvText = new Text();
+        this.scene.add(this.tvText);
+        this.textObjects.push(this.tvText);
+
+        this.tvText.fontSize = 0.06;
+        this.tvText.font = "src/assets/fonts/NotoSansJP-Bold.ttf"
+
+        this.tvText.textAlign = "left"
+        this.tvText.anchorX = "0%";
+        this.tvText.anchorY = "50%";
+
+        this.tvText.sdfGlyphSize = this.app.lyricsData.glyphSize;
+        this.tvText.text = "0:00";
+
+        this.tvText.position.set(0.282, 1.032, 0.65);
+        this.tvText.clipRect = [-1, -1, 1.6, 1]
+        this.tvText.rotation.y = Math.PI / 2;
+        this.tvText.sync();
+    }
+
     initNotebook() {
         this.notebookText = new Text();
         this.scene.add(this.notebookText)
@@ -336,6 +398,18 @@ export class ThreeManager {
             } else {
                 currChar.object.visible = false;
             }
+        }
+    }
+
+    updateTv() {
+        this.timeStamp.text = this.posToTimestamp(this.app.player.videoPosition);
+        this.timeStamp.sync();
+
+        this.tvText.text = this.app.lyricsData.phrase;
+        this.tvText.sync();
+
+        if (this.newsTitle) {
+            this.newsTitle.material.color = this.app.lyricsData.moodColor;
         }
     }
 
@@ -446,6 +520,7 @@ export class ThreeManager {
 
                 this.initBigLyrics();
                 this.initFloatingChars();
+                this.initTv();
                 this.initNotebook();
                 this.initPolaroids();
 
@@ -459,6 +534,7 @@ export class ThreeManager {
     updateAllText() {
         this.updateBigLyrics();
         this.updateFloatingChars();
+        this.updateTv();
         this.updateNotebook();
         this.updatePolaroids();
     }
@@ -486,6 +562,13 @@ export class ThreeManager {
         }
 
         return lastChar;
+    }
+
+    posToTimestamp(pos) {
+        const minutes = Math.floor(Math.floor(pos / 1000) / 60);
+        const seconds = Math.floor(pos / 1000) % 60;
+
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
     resize() {

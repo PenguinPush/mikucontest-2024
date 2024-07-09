@@ -29,6 +29,7 @@ class AppManager {
         this.lyricsData = new LyricsData(this);
         this.threeMng = new ThreeManager(this);
         this.position = 0;
+        this.songId = 1;
         this.player = new Player({
             app: {
                 appAuthor: "Andrew", appName: "miku miku", token: "voiEWpeaIFwNII7p",
@@ -64,6 +65,8 @@ class AppManager {
 
     loadSong(value, isCustom) {
         // song loading system
+        this.songId = value;
+
         this.player.video && this.player.requestPause();
         this.player.volume = volumeSlider.value
 
@@ -394,6 +397,7 @@ function onTimeUpdate(pos) {
 
     if (pos < App.player.video.firstChar.startTime) {
         App.lyricsData.word = "";
+        App.lyricsData.phrase = "";
     }
 
     if (App.lyricsData.choruses[App.lyricsData.chorusIndex].contains(pos)) {
