@@ -369,9 +369,9 @@ export class ThreeManager {
                     currChar.object.visible = true;
 
                     // Increment position of char based on a normalized vector of the end - start position
-                    currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (this.app.position - currChar.creationTime + 200) * 0.001;
-                    currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (this.app.position - currChar.creationTime + 200) * 0.001;
-                    currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (this.app.position - currChar.creationTime + 200) * 0.001;
+                    currChar.currentPosition[0] = currChar.startPosition[0] + currChar.movementVector[0] * (this.app.player.videoPosition - currChar.creationTime + 200) * 0.001;
+                    currChar.currentPosition[1] = currChar.startPosition[1] + currChar.movementVector[1] * (this.app.player.videoPosition - currChar.creationTime + 200) * 0.001;
+                    currChar.currentPosition[2] = currChar.startPosition[2] + currChar.movementVector[2] * (this.app.player.videoPosition - currChar.creationTime + 200) * 0.001;
 
                     currChar.object.outlineColor = this.app.lyricsData.moodColor;
                     currChar.object.position.set(...currChar.currentPosition);
@@ -385,18 +385,18 @@ export class ThreeManager {
         }
     }
 
-    getLastChar(){
+    getLastChar(li){
         // Binary Search the last character to be rendered
         let left = 0;
-        let right = this.app.lyricsData.sortedCharsList.length - 1;
+        let right = li.length - 1;
 
         let lastChar = right;
 
         while (left <= right){
             let mid = Math.floor((right + left) / 2);
-            if (this.app.lyricsData.sortedCharsList[mid]._data.startTime > this.app.position){
-                lastChar = mid;
+            if (li[mid]._data.startTime > this.app.player.videoPosition){
                 right = mid - 1;
+                lastChar = mid;
             }
             else {
                 left = mid + 1;
@@ -404,9 +404,10 @@ export class ThreeManager {
         }
 
         lastChar -= 1;
-        while (this.app.lyricsData.sortedCharsList[lastChar] === "　") {
+        while (li[lastChar] === "　") {
             lastChar -= 1;
         }
+
         return lastChar;
     }
 
@@ -415,7 +416,7 @@ export class ThreeManager {
             this.app.lyricsData.calculateNotebook();
         }
 
-        let lastChar = this.getLastChar();
+        let lastChar = this.getLastChar(this.app.lyricsData.sortedCharsList);
 
         let newText = [];
         let cnt = 0;
@@ -436,8 +437,8 @@ export class ThreeManager {
     }
 
     updatePolaroids() {
-        let lastChar = this.getLastChar();
-
+        let lastChar = this.getLastChar(this.app.lyricsData.rawCharList);
+        console.log(this.app.lyricsData.rawCharList);
         this.polaroids.forEach((polaroid, i) => {
             if (this.app.lyricsData.rawCharList[lastChar]) {
                 if (lastChar % POLAROID_COUNT === i) {
@@ -446,7 +447,7 @@ export class ThreeManager {
                     polaroid.outlineOpacity = 1;
                     polaroid.outlineColor = this.app.lyricsData.moodColor;
 
-                    const outlineAge = this.app.position - this.app.lyricsData.rawCharList[lastChar].startTime
+                    const outlineAge = this.app.player.videoPosition - this.app.lyricsData.rawCharList[lastChar].startTime
                     polaroid.outlineOpacity = 0.995 ** outlineAge;
 
                     // text movement (exaggerated, because it's smaller)
@@ -456,12 +457,14 @@ export class ThreeManager {
                     // calculate how far behind the active polaroid this polaroid is
                     const relativeIndex = (((lastChar % POLAROID_COUNT - i) % POLAROID_COUNT) + POLAROID_COUNT) % POLAROID_COUNT // weird modulo to fix javascript bug
                     if (lastChar - relativeIndex >= 0) {
-                        const fillAge = this.app.position - this.app.lyricsData.rawCharList[lastChar - relativeIndex].endTime;
+                        const fillAge = this.app.player.videoPosition - this.app.lyricsData.rawCharList[lastChar - relativeIndex].endTime;
+
                         polaroid.text = this.app.lyricsData.rawCharList[lastChar - relativeIndex]
 
                         // fade out polaroids age they age
                         polaroid.fillOpacity = 0.995 ** fillAge;
                         polaroid.outlineOpacity = 0;
+                        // console.log(fillAge);
                     }
                 }
 
