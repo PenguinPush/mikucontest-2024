@@ -1,6 +1,6 @@
 <img src="./src/assets/logo.png" style="width: 100%" />
 
-Title: Vivid Room <br><br>
+Title: Vivid Bedroom <br><br>
 Supported Songs:
 - SUPERHERO
 - いつか君と話したミライは
