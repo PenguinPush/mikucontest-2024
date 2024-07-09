@@ -23,7 +23,7 @@ By clicking the arrows on the side, you are able to change your point of view to
 - Go to [this link](https://penguinpush.github.io/mikucontest-2024/) to access the application
 
 ## Authors
-
+<b>Team "100% Andrew"</b>
 - 3d Modeller/Code: [@PenguinPush](https://www.github.com/PenguinPush)
 - Code: [@tandr3w](https://www.github.com/tandr3w)
 - 3d Modeller/2d Texturing: [@f4ngyan](https://www.github.com/f4ngyan)
