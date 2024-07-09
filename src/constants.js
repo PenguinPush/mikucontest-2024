@@ -71,4 +71,5 @@ export const MAX_LINES = 15;
 export const NOTEBOOK_TEXT_SIZE = BASE_TEXT_SIZE / 20;
 export const POLAROID_TEXT_SIZE = BASE_TEXT_SIZE / 12;
 export const POLAROID_COUNT = 6;
+export const TV_INSTANCE_COUNT = 6;
 
