@@ -4,7 +4,7 @@
 
  ^ 日本語のREADMEをご覧になりたい方は、上のボタンをクリックしてください。
 
-Title: Vivid Room <br><br>
+## Vivid Room <br>
 Supported Songs:
 - SUPERHERO
 - いつか君と話したミライは
