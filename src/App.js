@@ -433,10 +433,10 @@ function onTimeUpdate(pos) {
     }
 
     if (lyricsData.choruses[lyricsData.chorusIndex].contains(pos)) {
-        console.log('a');
+        // console.log('a');
     }
 
-    console.log(lyricsData.choruses[lyricsData.chorusIndex]);
+    // console.log(lyricsData.choruses[lyricsData.chorusIndex]);
 }
 
 function onPlay() {
@@ -526,7 +526,7 @@ function animatePhrase(pos, unit) {
 }
 
 function update() {
-    if (threeMng.composer) {
+    if (threeMng.ready) {
         threeMng.update(position);
     }
     window.requestAnimationFrame(() => update());
@@ -560,15 +560,12 @@ class ThreeManager {
         this.outerSky = null;
 
         this.renderer.shadowMap.enabled = true;
-        this.renderer.shadowMap.autoUpdate = false;
         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        this.initScene();
-        this.initCamera();
-        this.initControls();
-        this.initPostProcessing();
-
+        this.renderer.shadowMap.autoUpdate = false;
         this.renderer.shadowMap.needsUpdate = true;
+
+        this.ready = false;
+        this.initAllThree().then(() => update());
     }
 
     goLeft() {
@@ -1030,7 +1027,7 @@ class ThreeManager {
         // calculate colors to update lighting based on valence/arousal values
         this.moodLight.color = lyricsData.moodColor;
 
-        // update sky rotation -- if it exists
+        // update sky rotation
         if (this.innerSky && this.coloredSky && this.outerSky) {
             this.innerSky.rotation.y = -1 / 6000 * pos * this.skySpeed;
             this.coloredSky.material.color = new THREE.Color().addColors(lyricsData.moodColor, new THREE.Color(0.2, 0.2, 0.2));
@@ -1065,6 +1062,20 @@ class ThreeManager {
         this.composer.render(this.scene, this.camera);
     }
 
+    initAllThree() {
+        return new Promise((resolve, reject) => {
+            try {
+                this.initScene();
+                this.initCamera();
+                this.initControls();
+                this.initPostProcessing();
+                resolve(this.ready = true);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
     initAllText() {
         return new Promise((resolve, reject) => {
             try {
@@ -1077,8 +1088,7 @@ class ThreeManager {
                 this.initFloatingChars();
                 this.initNotebook();
                 this.initPolaroids();
-                lyricsData.textLoaded = true;
-                resolve();
+                resolve(lyricsData.textLoaded = true);
             } catch (error) {
                 reject(error);
             }

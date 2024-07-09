@@ -29,7 +29,7 @@ export const cameraPositions = [
     },
 
     { // TV
-        pos: [2.2, 1.07, -0.5],
+        pos: [2.2, 1.07, -0.05],
         rot: [Math.PI / 2, Math.PI / 2],
         text: [2.71, -10, -0.04]
     },
