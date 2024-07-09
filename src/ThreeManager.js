@@ -335,7 +335,7 @@ export class ThreeManager {
             this.bigLyrics.text = this.app.lyricsData.word;
             this.bigLyrics.fontSize = BASE_TEXT_SIZE * this.app.lyricsData.textScale;
             this.bigLyrics.letterSpacing = this.app.lyricsData.stretch / 10;
-            this.bigLyrics.scale.set(1 + (this.app.lyricsData.stretch) ** 3, 1 - (this.app.lyricsData.stretch) ** 3);
+            // this.bigLyrics.scale.set(1 + (this.app.lyricsData.stretch) ** 3, 1 - (this.app.lyricsData.stretch) ** 3);
             this.bigLyrics.outlineColor = this.app.lyricsData.moodColor;
         }
 
@@ -434,7 +434,7 @@ export class ThreeManager {
 
                     // text movement (exaggerated, because it's smaller)
                     polaroid.fontSize = POLAROID_TEXT_SIZE * this.app.lyricsData.textScale ** 2;
-                    polaroid.scale.set(1 + this.app.lyricsData.stretch / 5, 1 - this.app.lyricsData.stretch / 5);
+                    // polaroid.scale.set(1 + this.app.lyricsData.stretch / 5, 1 - this.app.lyricsData.stretch / 5);
                 } else {
                     // calculate how far behind the active polaroid this polaroid is
                     const relativeIndex = (((lastChar % POLAROID_COUNT - i) % POLAROID_COUNT) + POLAROID_COUNT) % POLAROID_COUNT // weird modulo to fix javascript bug
@@ -446,10 +446,8 @@ export class ThreeManager {
                         // fade out polaroids age they age
                         polaroid.fillOpacity = 0.995 ** fillAge;
                         polaroid.outlineOpacity = 0;
-                        // console.log(fillAge);
                     }
                 }
-
             }
 
             if (lastChar === -1) {

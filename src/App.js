@@ -72,7 +72,7 @@ class AppManager {
         }
 
         // initialize lyrics data
-        this.lyricsData = new LyricsData()
+        this.lyricsData = new LyricsData(this);
 
         // reset ui
         progressBar.style.background = "repeating-linear-gradient(60deg, #d3d3d3 0%, #d3d3d3 5%, #a9a9a9 5%, #a9a9a9 10%)";
@@ -310,7 +310,6 @@ function onVideoReady(v) {
                     movementVector: [1, 0, 0],
                     currentPosition: [0, 0, 0],
                 });
-
                 App.lyricsData.enIndex = (App.lyricsData.enIndex + 1) % 5
             } else {
                 App.lyricsData.floatingChars.push({
