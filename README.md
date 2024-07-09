@@ -35,4 +35,3 @@ By clicking the arrows on the side, you are able to change your point of view to
 ## Acknowledgements
 
  - "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
- - "Hatsune Miku Fumo" (https://shorturl.at/GsUjT) is supplied by _Kassjak_ under a Free Standard license (https://sketchfab.com/licenses)
