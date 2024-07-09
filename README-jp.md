@@ -33,4 +33,3 @@ Supported Songs:
 ## Acknowledgements
 
  - "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
- - "Hatsune Miku Fumo" (https://shorturl.at/GsUjT) is supplied by _Kassjak_ under a Free Standard license (https://sketchfab.com/licenses)
