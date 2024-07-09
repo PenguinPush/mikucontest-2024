@@ -1,10 +1,6 @@
 // import necessary modules
 import * as THREE from "three";
 
-import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
-import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
-import {HalftonePass} from 'three/addons/postprocessing/HalftonePass.js';
-import {OutputPass} from 'three/addons/postprocessing/OutputPass.js';
 import {Text} from "https://cdn.jsdelivr.net/npm/troika-three-text@0.49.1/+esm";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Reflector} from 'three/addons/objects/Reflector.js';
@@ -301,32 +297,6 @@ export class ThreeManager {
         }
     }
 
-    initPostProcessing() {
-        this.composer = new EffectComposer(this.renderer);
-
-        const renderPass = new RenderPass(this.scene, this.camera.camera);
-        this.composer.addPass(renderPass);
-
-        const params = {
-            shape: 4,
-            radius: 4,
-            rotateR: 0,
-            rotateB: 0,
-            rotateG: 0,
-            scatter: 0,
-            blending: 0.5,
-            blendingMode: 0,
-            greyscale: false,
-            disable: false
-        };
-
-        const halftonePass = new HalftonePass(window.innerWidth, window.innerHeight, params);
-        // this.composer.addPass(halftonePass);
-
-        const outputPass = new OutputPass();
-        this.composer.addPass(outputPass);
-    }
-
     updateBigLyrics() {
         if (this.camera.index !== BEDROOM && this.camera.index !== FULL_VIEW) {
             this.bigLyrics.visible = false;
@@ -475,7 +445,7 @@ export class ThreeManager {
         }
 
         this.camera.update(this.inputX, this.inputY, this.isTouching);
-        this.composer.render(this.scene, this.camera.camera);
+        this.renderer.render(this.scene, this.camera.camera);
     }
 
     initAllThree() {
