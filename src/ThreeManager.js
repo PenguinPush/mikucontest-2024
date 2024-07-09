@@ -1,6 +1,5 @@
 // import necessary modules
 import * as THREE from "three";
-import CameraControls from "https://cdn.jsdelivr.net/npm/camera-controls@2.8.5/+esm";
 
 import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
 import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
@@ -13,15 +12,12 @@ import {Reflector} from 'three/addons/objects/Reflector.js';
 import {Camera} from "./Camera.js";
 
 import {
-    baseFov,
     BASE_TEXT_SIZE,
     BEDROOM,
     cameraPositions,
     FULL_VIEW,
     MAX_CHARS_PER_LINE,
     MAX_LINES,
-    maxFov,
-    minFov,
     noShadows,
     NOTEBOOK_TEXT_SIZE,
     POLAROID_COUNT,
@@ -30,8 +26,6 @@ import {
     WINDOW,
     WINDOW_TEXT_SIZE,
 } from "./constants.js";
-
-CameraControls.install({THREE: THREE});
 
 // everything 3d
 export class ThreeManager {
@@ -45,8 +39,6 @@ export class ThreeManager {
 
         this.camera = new Camera(app, this.renderer);
 
-        this.movementStrength = 1 / 10;
-        this.rotateStrength = 1 / 12;
         this.skySpeed = 1;
 
         this.textObjects = [];
@@ -503,8 +495,7 @@ export class ThreeManager {
             this.outerSky.rotation.y = -1 / 8000 * pos * this.skySpeed;
         }
 
-        this.camera.update();
-
+        this.camera.update(this.inputX, this.inputY, this.isTouching);
         this.composer.render(this.scene, this.camera.camera);
     }
 
