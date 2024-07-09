@@ -939,16 +939,26 @@ class ThreeManager {
             lyricsData.calculateNotebook();
         }
 
-        // Find the last character to be rendered
-        let lastChar = lyricsData.sortedCharsList.length - 1;
-        for (let i = 0; i < lyricsData.sortedCharsList.length; i++) {
-            if (lyricsData.sortedCharsList[i]._data.startTime > player.videoPosition) {
-                lastChar = i - 1;
-                while (lyricsData.sortedCharsList[lastChar] === "　") {
-                    lastChar -= 1;
-                }
-                break;
+        // Binary Search the last character to be rendered
+        let left = 0;
+        let right = lyricsData.sortedCharsList.length - 1;
+
+        let lastChar = right;
+
+        while (left <= right){
+            let mid = Math.floor((right + left) / 2);
+            if (lyricsData.sortedCharsList[mid]._data.startTime > player.videoPosition){
+                lastChar = mid;
+                right = mid - 1;
             }
+            else {
+                left = mid + 1;
+            }
+        }
+
+        lastChar -= 1;
+        while (lyricsData.sortedCharsList[lastChar] === "　") {
+            lastChar -= 1;
         }
 
         let newText = [];
