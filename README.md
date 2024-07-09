@@ -1,5 +1,9 @@
 <img src="./src/assets/logo.png" style="width: 100%" />
 
+[![jp](https://img.shields.io/badge/lang-jp-red.svg)](https://github.com/PenguinPush/mikucontest-2024/blob/main/README-jp.md)
+
+ ^ 日本語のREADMEをご覧になりたい方は、上のボタンをクリックしてください。
+
 Title: Vivid Room <br><br>
 Supported Songs:
 - SUPERHERO
