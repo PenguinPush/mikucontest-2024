@@ -37,3 +37,5 @@ As long-time Hatsune Miku fans from Canada, we're thankful that we got the chanc
 ## Acknowledgements
 
  - "Low poly Miku Hatsune" (https://skfb.ly/opxv6) by emanueler is licensed under Creative Commons Attribution-NonCommercial (http://creativecommons.org/licenses/by-nc/4.0/).
+ - Poster artwork from Hatsune Miku Magical Mirai (https://magicalmirai.com/2024/)<br><br>
+ - Please contact andrewdai.dev@gmail.com for content notices.
