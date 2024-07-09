@@ -16,9 +16,11 @@ Supported Songs:
 ## Overview
 
 <p>
-We created an app that displays a virtual musical environment for the Hatsune Miku 2024 Magical Mirai Coding Competition. This allows you to explore the bedroom of a Miku fan, while enjoying the music of Magical Mirai in an immersive environnment.
+Accompanied by 6 different song options, you can explore your Hatsune Miku superfan bedroom as the room's elements display the lyrics in tandem with the music.
+By clicking the arrows/buttons (depending on your device), you can change your point of view to explore different parts of the bedroom and experience all the ways the text is shown.
 
-By clicking the arrows on the side, you are able to change your point of view to explore different parts of the bedroom, while the music plays in tandem with the room's elements.
+With this project, we tried to capture the cute and cozy feeling of a lazy summer day at home, those days where you don't do a lot except wander around your room. We hope we were successful with this.
+As long-time Hatsune Miku fans from Canada, we're thankful that we got the chance to submit a project from across the world. Enjoy this creation as much as we did, but don't forget to spend time outside!
 </p>
 
 ## Notes
