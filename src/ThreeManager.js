@@ -10,6 +10,8 @@ import {Text} from "https://cdn.jsdelivr.net/npm/troika-three-text@0.49.1/+esm";
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {Reflector} from 'three/addons/objects/Reflector.js';
 
+import {Camera} from "./Camera.js";
+
 import {
     baseFov,
     BASE_TEXT_SIZE,
@@ -35,12 +37,14 @@ CameraControls.install({THREE: THREE});
 export class ThreeManager {
     constructor(app) {
         this.app = app;
+
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio)
         document.getElementById("view").appendChild(this.renderer.domElement);
 
-        this.cameraPosIndex = 0;
+        this.camera = new Camera(app, this.renderer);
+
         this.movementStrength = 1 / 10;
         this.rotateStrength = 1 / 12;
         this.skySpeed = 1;
@@ -58,26 +62,6 @@ export class ThreeManager {
 
         this.ready = false;
         this.initAllThree().then(() => this.app.update());
-    }
-
-    goLeft() {
-        this.cameraPosIndex -= 1;
-        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
-
-        if (this.bigLyrics){
-            this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-            this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
-        }
-    }
-
-    goRight() {
-        this.cameraPosIndex += 1;
-        this.cameraPosIndex = (this.cameraPosIndex + cameraPositions.length) % cameraPositions.length;
-
-        if (this.bigLyrics){
-            this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-            this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
-        }
     }
 
     initScene() {
@@ -199,28 +183,7 @@ export class ThreeManager {
         this.scene.add(ambientLight);
     }
 
-    initCamera() {
-        this.camera = new THREE.PerspectiveCamera(THREE.MathUtils.clamp(baseFov / (window.innerWidth / window.innerHeight) * 1.5, minFov, maxFov), window.innerWidth / window.innerHeight, 0.1, 1000);
-        this.cameraControls = new CameraControls(this.camera, this.renderer.domElement);
-        this.clock = new THREE.Clock();
-
-        let cameraPos = cameraPositions[this.cameraPosIndex].pos
-        let cameraRot = cameraPositions[this.cameraPosIndex].rot
-        this.camera.position.set(cameraPos[0], cameraPos[1], cameraPos[2]);
-        this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], false);
-        this.cameraControls.distance = this.cameraControls.minDistance = this.cameraControls.maxDistance = 0.1;
-
-        this.cameraControls.mouseButtons.left = CameraControls.ACTION.NONE;
-        this.cameraControls.mouseButtons.right = CameraControls.ACTION.NONE;
-        this.cameraControls.mouseButtons.middle = CameraControls.ACTION.NONE;
-        this.cameraControls.mouseButtons.wheel = CameraControls.ACTION.NONE;
-        this.cameraControls.touches.one = CameraControls.ACTION.NONE;
-        this.cameraControls.touches.two = CameraControls.ACTION.NONE;
-        this.cameraControls.touches.three = CameraControls.ACTION.NONE;
-
-        this.cameraControls.saveState();
-        this.cameraControls.update(this.clock.getDelta())
-    }
+    
 
     initControls() {
         this.inputX = 0;
@@ -268,8 +231,8 @@ export class ThreeManager {
             }, 1000 / 30);
         });
 
-        document.querySelectorAll(".left").forEach((leftArrow) => leftArrow.addEventListener("click", () => this.goLeft()));
-        document.querySelectorAll(".right").forEach((rightArrow) => rightArrow.addEventListener("click", () => this.goRight()));
+        document.querySelectorAll(".left").forEach((leftArrow) => leftArrow.addEventListener("click", () => this.camera.goLeft()));
+        document.querySelectorAll(".right").forEach((rightArrow) => rightArrow.addEventListener("click", () => this.camera.goRight()));
     }
 
     initBigLyrics() {
@@ -288,8 +251,8 @@ export class ThreeManager {
         this.bigLyrics.outlineOffsetY = "6%";
         this.bigLyrics.sdfGlyphSize = this.app.lyricsData.glyphSize;
 
-        this.bigLyrics.position.set(...cameraPositions[this.cameraPosIndex].text);
-        this.bigLyrics.lookAt(...cameraPositions[this.cameraPosIndex].pos);
+        this.bigLyrics.position.set(...cameraPositions[this.camera.index].text);
+        this.bigLyrics.lookAt(...cameraPositions[this.camera.index].pos);
     }
 
     initFloatingChars() {
@@ -365,7 +328,7 @@ export class ThreeManager {
     initPostProcessing() {
         this.composer = new EffectComposer(this.renderer);
 
-        const renderPass = new RenderPass(this.scene, this.camera);
+        const renderPass = new RenderPass(this.scene, this.camera.camera);
         this.composer.addPass(renderPass);
 
         const params = {
@@ -389,7 +352,7 @@ export class ThreeManager {
     }
 
     updateBigLyrics() {
-        if (this.cameraPosIndex !== BEDROOM && this.cameraPosIndex !== FULL_VIEW) {
+        if (this.camera.index !== BEDROOM && this.camera.index !== FULL_VIEW) {
             this.bigLyrics.visible = false;
         } else {
             this.bigLyrics.visible = true;
@@ -407,7 +370,7 @@ export class ThreeManager {
         for (let i = 0; i < this.app.lyricsData.floatingChars.length; i++) {
             let currChar = this.app.lyricsData.floatingChars[i];
 
-            if (this.cameraPosIndex === WINDOW) {
+            if (this.camera.index === WINDOW) {
                 // only calculate for the positions where you can see the window
                 if (0 < currChar.currentPosition[0] < 3.5) {
                     // only run calculations for characters in frame
@@ -525,9 +488,6 @@ export class ThreeManager {
     }
 
     update(pos) {
-        let cameraPos = cameraPositions[this.cameraPosIndex].pos
-        let cameraRot = cameraPositions[this.cameraPosIndex].rot
-
         if (this.app.lyricsData.textLoaded) {
             this.updateAllText();
         }
@@ -543,38 +503,16 @@ export class ThreeManager {
             this.outerSky.rotation.y = -1 / 8000 * pos * this.skySpeed;
         }
 
-        // set camera movement modifier
-        let movementDampener = 100 / this.camera.fov;
-        if (this.inputX ** 2 + this.inputY ** 2 > 1) {
-            movementDampener = 100 / (this.inputX ** 2 + this.inputY ** 2) ** 0.5 / this.camera.fov;
-        } // if the cursor exits the radius, scale the strength of the movement down in tandem with how far the cursor goes
+        this.camera.update();
 
-        if (this.isTouching) {
-            // easy math to make the camera translate along its local z plane instead of the global one
-            let forward = this.camera.getWorldDirection(new THREE.Vector3()).negate();
-            let up = this.camera.up.clone();
-            let right = new THREE.Vector3().crossVectors(forward, up);
-            let movementX = right.multiplyScalar(-this.inputX * this.movementStrength * movementDampener);
-            let movementY = up.multiplyScalar(this.inputY * this.movementStrength * movementDampener);
-            let targetPosition = new THREE.Vector3(...cameraPos).add(movementX).add(movementY);
-
-            this.cameraControls.moveTo(targetPosition.x, targetPosition.y, targetPosition.z, true);
-            this.cameraControls.rotateTo(cameraRot[0] - this.inputX * this.rotateStrength, cameraRot[1] + this.inputY * this.rotateStrength, true)
-        } else {
-            // set to default positions
-            this.cameraControls.moveTo(cameraPos[0], cameraPos[1], cameraPos[2], true)
-            this.cameraControls.rotateTo(cameraRot[0], cameraRot[1], true)
-        }
-
-        this.cameraControls.update(this.clock.getDelta())
-        this.composer.render(this.scene, this.camera);
+        this.composer.render(this.scene, this.camera.camera);
     }
 
     initAllThree() {
         return new Promise((resolve, reject) => {
             try {
                 this.initScene();
-                this.initCamera();
+                this.camera.initCamera();
                 this.initControls();
                 this.initPostProcessing();
                 resolve(this.ready = true);
@@ -616,10 +554,8 @@ export class ThreeManager {
         this.composer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setPixelRatio(window.devicePixelRatio)
 
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.fov = THREE.MathUtils.clamp(baseFov / this.camera.aspect * 1.5, minFov, maxFov);
+        this.camera.resize();
 
-        this.camera.updateProjectionMatrix();
         this.update()
     }
 
