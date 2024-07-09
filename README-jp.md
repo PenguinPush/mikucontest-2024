@@ -6,7 +6,8 @@
 <img src="./src/assets/readme/mirror view.png" style="width: 33%" />
 <img src="./src/assets/readme/window view.png" style="width: 33%" />
 
-Title: Vivid Bedroom <br><br>
+## Vivid Bedroom <br>
+
 Supported Songs:
 - SUPERHERO
 - いつか君と話したミライは
