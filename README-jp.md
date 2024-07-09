@@ -1,4 +1,10 @@
-<img src="./src/assets/buttons/icon.png" style="width: 100%" />
+<img src="./src/assets/readme/main view.png" style="width: 33%" />
+<img src="./src/assets/readme/notebook.png" style="width: 33%" />
+<img src="./src/assets/readme/polaroids.png" style="width: 33%" />
+
+<img src="./src/assets/readme/tv view.png" style="width: 33%" />
+<img src="./src/assets/readme/mirror view.png" style="width: 33%" />
+<img src="./src/assets/readme/window view.png" style="width: 33%" />
 
 Title: Vivid Bedroom <br><br>
 Supported Songs:

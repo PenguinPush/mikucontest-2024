@@ -1,4 +1,11 @@
-<img src="./src/assets/buttons/icon.png" style="width: 100%" />
+<img src="./src/assets/readme/main view.png" style="width: 33%" />
+<img src="./src/assets/readme/notebook.png" style="width: 33%" />
+<img src="./src/assets/readme/polaroids.png" style="width: 33%" />
+
+<img src="./src/assets/readme/tv view.png" style="width: 33%" />
+<img src="./src/assets/readme/mirror view.png" style="width: 33%" />
+<img src="./src/assets/readme/window view.png" style="width: 33%" />
+
 
 [![jp](https://img.shields.io/badge/lang-jp-red.svg)](https://github.com/PenguinPush/mikucontest-2024/blob/main/README-jp.md)
 
