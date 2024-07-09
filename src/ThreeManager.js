@@ -438,7 +438,6 @@ export class ThreeManager {
 
     updatePolaroids() {
         let lastChar = this.getLastChar(this.app.lyricsData.rawCharList);
-        console.log(this.app.lyricsData.rawCharList);
         this.polaroids.forEach((polaroid, i) => {
             if (this.app.lyricsData.rawCharList[lastChar]) {
                 if (lastChar % POLAROID_COUNT === i) {
@@ -464,10 +463,8 @@ export class ThreeManager {
                         // fade out polaroids age they age
                         polaroid.fillOpacity = 0.995 ** fillAge;
                         polaroid.outlineOpacity = 0;
-                        // console.log(fillAge);
                     }
                 }
-
             }
 
             if (lastChar === -1) {
