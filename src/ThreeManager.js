@@ -96,11 +96,11 @@ export class ThreeManager {
                         mirror.position.copy(item.position);
                         mirror.rotation.set(0, -Math.PI / 2, 0)
 
-                        this.app.threeMng.mirrorBase = item;
-                        this.app.threeMng.mirrorReflector = mirror;
-                        this.app.threeMng.mirrorReflector.visible = false;
+                        this.mirrorBase = item;
+                        this.mirrorReflector = mirror;
+                        this.mirrorReflector.visible = false;
 
-                        this.app.threeMng.scene.add(this.app.threeMng.mirrorReflector);
+                        this.scene.add(this.mirrorReflector);
                     }
 
                     // if (item.material.name === "polaroid"){
@@ -117,7 +117,7 @@ export class ThreeManager {
                     item.castShadow = false;
                     item.receiveShadow = false;
 
-                    this.app.threeMng.innerSky = item;
+                    this.innerSky = item;
                 }
 
                 if (item.name === "colored_sky") {
@@ -127,18 +127,18 @@ export class ThreeManager {
                     item.castShadow = false;
                     item.receiveShadow = false;
 
-                    this.app.threeMng.coloredSky = item;
+                    this.coloredSky = item;
                 }
 
                 if (item.name === "outer_sky") {
                     item.castShadow = false;
                     item.receiveShadow = false;
 
-                    this.app.threeMng.outerSky = item;
+                    this.outerSky = item;
                 }
             }.bind(this));
 
-            this.app.threeMng.scene.add(room);
+            this.scene.add(room);
         }.bind(this))
 
         this.light = new THREE.PointLight(0xffe7d0, 3, 0, 1);
@@ -516,8 +516,8 @@ export class ThreeManager {
     initAllText() {
         return new Promise((resolve, reject) => {
             try {
-                this.app.threeMng.textObjects.forEach((object => {
-                    this.app.threeMng.scene.remove(object);
+                this.textObjects.forEach((object => {
+                    this.scene.remove(object);
                     object.dispose();
                 }));
 
