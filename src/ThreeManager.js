@@ -454,7 +454,6 @@ export class ThreeManager {
                 this.initScene();
                 this.camera.initCamera();
                 this.initControls();
-                this.initPostProcessing();
                 resolve(this.ready = true);
             } catch (error) {
                 reject(error);
