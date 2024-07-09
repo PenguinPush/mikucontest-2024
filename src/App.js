@@ -319,7 +319,7 @@ function onVideoReady(v) {
                     currentPosition: [0, 0, 0],
                 });
 
-                App.lyricsData.enIndex = 0
+                App.lyricsData.enIndex = 0;
             }
 
             App.lyricsData.previousUnits.add(c);

@@ -385,11 +385,7 @@ export class ThreeManager {
         }
     }
 
-    updateNotebook() {
-        if (this.app.lyricsData.sortedCharsList.length === 0) {
-            this.app.lyricsData.calculateNotebook();
-        }
-
+    getLastChar(){
         // Binary Search the last character to be rendered
         let left = 0;
         let right = this.app.lyricsData.sortedCharsList.length - 1;
@@ -411,6 +407,15 @@ export class ThreeManager {
         while (this.app.lyricsData.sortedCharsList[lastChar] === "　") {
             lastChar -= 1;
         }
+        return lastChar;
+    }
+
+    updateNotebook() {
+        if (this.app.lyricsData.sortedCharsList.length === 0) {
+            this.app.lyricsData.calculateNotebook();
+        }
+
+        let lastChar = this.getLastChar();
 
         let newText = [];
         let cnt = 0;
@@ -431,16 +436,7 @@ export class ThreeManager {
     }
 
     updatePolaroids() {
-        let lastChar = this.app.lyricsData.rawCharList.length - 1;
-        for (let i = 0; i < this.app.lyricsData.rawCharList.length; i++) {
-            if (this.app.lyricsData.rawCharList[i]._data.startTime > this.app.position) {
-                lastChar = i - 1;
-                while (this.app.lyricsData.rawCharList[lastChar] === "　") {
-                    lastChar -= 1;
-                }
-                break;
-            }
-        }
+        let lastChar = this.getLastChar();
 
         this.polaroids.forEach((polaroid, i) => {
             if (this.app.lyricsData.rawCharList[lastChar]) {
